@@ -4,6 +4,15 @@ Minimal, reproducible **multi-turn coding RLVR** engine and empirical study unde
 
 > **Thesis:** Multi-turn coding RL breaks in three measurable places—**(1) sandbox tail latency** starving GPUs, **(2) live reward hacking** against naive coding verifiers, and **(3) train–inference mismatch (TIM) & policy staleness** destabilizing GRPO. `loop` measures and solves all three end-to-end on <$300 of burst GPU compute.
 
+## Latest Empirical Results (1×H100, Qwen2.5-Coder-3B-Instruct, 20 GRPO Steps)
+
+Full write-up & reproduction commands: [docs/results-qwen3b-ablation.md](docs/results-qwen3b-ablation.md)
+
+| Training Verifier | Peak Train Reward | Held-Out `pass@1` (s0 → s20, 95% CI) | Held-Out `pass@4` | Mean Turns (s0 → s20) |
+| :--- | :---: | :---: | :---: | :---: |
+| **Hardened** (pristine + hidden tests) | `53.1%` | `6.7%` → **`38.3%`** `[24.2%, 53.3%]` (**+31.7 pp**) | `23.3%` → **`56.7%`** | `2.82 → 4.68` |
+| **Naive** (workspace tests only) | `100.0%` | `8.3%` → `19.2%` `[9.2%, 29.2%]` (Goodhart stall) | `30.0%` → `33.3%` | `2.79 → 2.88` |
+
 ## Architecture
 
 ```text
