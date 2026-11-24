@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import importlib
 import json
 from dataclasses import asdict
 from pathlib import Path
@@ -17,7 +18,7 @@ from loop.types import GraderMode, Split, TaskSpec, VerifierReceipt
 
 _modal: Any
 try:
-    import modal as _modal
+    _modal = importlib.import_module("modal")
 except ImportError:
     _modal = None
 
@@ -113,8 +114,8 @@ if _modal is not None:
         grader_mode: GraderMode = "hardened",
     ) -> dict[str, Any]:
         """Run batched multi-turn vLLM baseline evaluation on Modal and save report to Volume."""
-        from vllm import LLM, SamplingParams  # type: ignore[import-not-found]
-        from vllm.inputs import TokensPrompt  # type: ignore[import-not-found]
+        from vllm import LLM, SamplingParams
+        from vllm.inputs import TokensPrompt
 
         llm = LLM(
             model=model,

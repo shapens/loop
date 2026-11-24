@@ -48,6 +48,10 @@ strict = true
 warn_unused_ignores = true
 
 [[tool.mypy.overrides]]
+module = ["modal", "modal.*", "triton", "triton.*", "vllm", "vllm.*", "peft", "transformers"]
+ignore_missing_imports = true
+
+[[tool.mypy.overrides]]
 module = ["loop.modal_app"]
 disallow_untyped_decorators = false
 

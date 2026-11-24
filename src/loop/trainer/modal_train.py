@@ -29,11 +29,11 @@ def run_colocated_grpo(
     SHA-256 export verification, and computes k3 KL reference logprobs with zero extra VRAM
     via `peft_model.disable_adapter()`.
     """
-    from peft import LoraConfig, get_peft_model  # type: ignore[import-not-found]
-    from transformers import AutoModelForCausalLM, AutoTokenizer  # type: ignore[import-not-found]
-    from vllm import LLM, SamplingParams  # type: ignore[import-not-found]
-    from vllm.inputs import TokensPrompt  # type: ignore[import-not-found]
-    from vllm.lora.request import LoRARequest  # type: ignore[import-not-found]
+    from peft import LoraConfig, get_peft_model
+    from transformers import AutoModelForCausalLM, AutoTokenizer
+    from vllm import LLM, SamplingParams
+    from vllm.inputs import TokensPrompt
+    from vllm.lora.request import LoRARequest
 
     output_dir.mkdir(parents=True, exist_ok=True)
     adapters_root = output_dir / "adapters"

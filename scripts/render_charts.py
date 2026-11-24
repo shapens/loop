@@ -3,9 +3,15 @@
 
 from __future__ import annotations
 
+import html
 import json
+import xml.etree.ElementTree as ET
 from pathlib import Path
 from typing import Any
+
+
+def _e(s: str) -> str:
+    return html.escape(s, quote=True)
 
 ROOT = Path(__file__).resolve().parents[1]
 RESULTS = ROOT / "results"
@@ -27,7 +33,7 @@ C_CYAN = "#39c5cf"
 def _svg_header(w: int, h: int, title: str) -> str:
     return (
         f'<svg xmlns="http://www.w3.org/2000/svg" width="{w}" height="{h}" '
-        f'viewBox="0 0 {w} {h}" role="img" aria-label="{title}">\n'
+        f'viewBox="0 0 {w} {h}" role="img" aria-label="{_e(title)}">\n'
         f'<style>'
         f"text {{ font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }}"
         f".title {{ font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; "
@@ -63,8 +69,8 @@ def _line_plot(
         f'<rect x="{x0}" y="{y0}" width="{pw}" height="{ph}" rx="8" '
         f'fill="{CARD}" stroke="{BORDER}"/>'
     )
-    parts.append(f'<text x="{x0 + 16}" y="{y0 + 24}" class="title">{title}</text>')
-    parts.append(f'<text x="{x0 + 16}" y="{y0 + 40}" class="sub">{subtitle}</text>')
+    parts.append(f'<text x="{x0 + 16}" y="{y0 + 24}" class="title">{_e(title)}</text>')
+    parts.append(f'<text x="{x0 + 16}" y="{y0 + 40}" class="sub">{_e(subtitle)}</text>')
 
     pl, pr, pt, pb = x0 + 48, x0 + pw - 18, y0 + 56, y0 + ph - 52
     iw, ih = pr - pl, pb - pt
@@ -133,7 +139,7 @@ def _line_plot(
             )
         else:
             parts.append(f'<circle cx="{cx + 4:.1f}" cy="{cy - 3:.1f}" r="3.5" fill="{col}"/>')
-        parts.append(f'<text x="{cx + 14:.1f}" y="{cy:.1f}" class="ax">{name}</text>')
+        parts.append(f'<text x="{cx + 14:.1f}" y="{cy:.1f}" class="ax">{_e(name)}</text>')
 
     return "\n".join(parts) + "\n"
 
@@ -381,7 +387,9 @@ def main() -> None:
     render_async_mis()
     render_7b_headline()
     render_systems_bench()
-    print("rendered charts to", ASSETS)
+    for p in sorted(ASSETS.glob("*.svg")):
+        ET.parse(p)
+    print("rendered and XML-validated all charts in", ASSETS)
 
 
 if __name__ == "__main__":

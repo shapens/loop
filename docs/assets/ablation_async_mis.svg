@@ -32,11 +32,11 @@
 <circle cx="320.0" cy="128.9" r="3.2" fill="#f85149"/>
 <circle cx="406.0" cy="117.8" r="3.2" fill="#f85149"/>
 <circle cx="34.0" cy="289.0" r="3.5" fill="#3fb950"/>
-<text x="44.0" y="292.0" class="ax">MIS (r<=1.5): 36.5%</text>
+<text x="44.0" y="292.0" class="ax">MIS (r&lt;=1.5): 36.5%</text>
 <line x1="223.0" x2="233.0" y1="289.0" y2="289.0" stroke="#f85149" stroke-width="2" stroke-dasharray="3 2"/>
 <text x="237.0" y="292.0" class="ax">Vanilla GRPO: 37.0%</text>
 <rect x="436" y="14" width="410" height="292" rx="8" fill="#161b22" stroke="#30363d"/>
-<text x="452" y="38" class="title">Off-Policy Ratio Tail & MIS Token Masking</text>
+<text x="452" y="38" class="title">Off-Policy Ratio Tail &amp; MIS Token Masking</text>
 <text x="452" y="54" class="sub">Fraction of assistant tokens with importance ratio spikes</text>
 <line x1="484.0" x2="828.0" y1="254.0" y2="254.0" class="grid"/>
 <text x="476.0" y="257.0" text-anchor="end" class="ax">0%</text>
@@ -117,9 +117,9 @@
 <circle cx="810.8" cy="254.0" r="3.2" fill="#d29922"/>
 <circle cx="828.0" cy="254.0" r="3.2" fill="#d29922"/>
 <circle cx="456.0" cy="275.0" r="3.5" fill="#39c5cf"/>
-<text x="466.0" y="278.0" class="ax">MIS masked tokens (r>1.5)</text>
+<text x="466.0" y="278.0" class="ax">MIS masked tokens (r&gt;1.5)</text>
 <line x1="645.0" x2="655.0" y1="275.0" y2="275.0" stroke="#f85149" stroke-width="2" stroke-dasharray="3 2"/>
-<text x="659.0" y="278.0" class="ax">Vanilla high-ratio (r>2.0)</text>
+<text x="659.0" y="278.0" class="ax">Vanilla high-ratio (r&gt;2.0)</text>
 <circle cx="456.0" cy="289.0" r="3.5" fill="#d29922"/>
-<text x="466.0" y="292.0" class="ax">MIS high-ratio (r>2.0)</text>
+<text x="466.0" y="292.0" class="ax">MIS high-ratio (r&gt;2.0)</text>
 </svg>

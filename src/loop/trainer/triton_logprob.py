@@ -5,8 +5,8 @@ import torch
 import torch.nn.functional as F
 
 try:
-    import triton  # type: ignore[import-not-found]
-    import triton.language as tl  # type: ignore[import-not-found]
+    import triton
+    import triton.language as tl
 
     HAS_TRITON = True
 except ImportError:
