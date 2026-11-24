@@ -42,8 +42,8 @@ Both runs share the **exact same model, prompt, hyperparameters, and training ta
    Exact vLLM token-ID handoff + SHA-256 verified LoRA hot-reload (`~1.0s/step`) held mean $|\log \pi_{\text{train}} - \log \pi_{\text{vLLM}}|$ at **`0.0021 – 0.0039`** across 10k active tokens/step, while still surfacing real kernel-level tail spikes (`max` up to `0.614` on naive step 12 / `0.358` on hardened step 1).
 4. **Wall-Clock Step Breakdown (3B on 1×H100, step 20):**
    `learner: 51.4%` (`8.97s`) · `vLLM rollout: 36.3%` (`6.33s`) · `sandbox: 6.4%` (`1.12s`) · `LoRA weight sync + SHA-256: 5.9%` (`1.03s`).
-5. **`shapens/tri` Isolated Workspace Substrate Receipt:**
-   End-to-end live integration against `tri serve` (`workspace create` → `--base64` file overlay → `tri run` isolated `unittest` → `workspace discard`) measured **71.1–74.5 ms** per graded rollout.
+5. **`shapens/tri` Integration:**
+   `TriSandboxBackend` collapses workspace creation, atomic `files write-batch`, sandboxed `tri run`, stdout/stderr streaming, and workspace discard into a single `POST /v0/batch` call. See [docs/memo.md](memo.md) (Study D) for the full `c = 1 → 64` macOS Seatbelt throughput and latency benchmarks.
 
 ---
 

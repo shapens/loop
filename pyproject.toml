@@ -5,10 +5,15 @@ build-backend = "hatchling.build"
 [project]
 name = "shapens-loop"
 version = "0.1.0"
-description = "Minimal, reproducible multi-turn coding RLVR engine & empirical study (PyTorch GRPO + vLLM + hardened sandboxes)."
+description = "Multi-turn coding RL engine in PyTorch, Triton, and vLLM"
 readme = "README.md"
 requires-python = ">=3.11"
 license = { text = "MIT" }
+
+[project.urls]
+Homepage = "https://shapens.com"
+Repository = "https://github.com/shapens/loop"
+Issues = "https://github.com/shapens/loop/issues"
 dependencies = [
   "pydantic>=2.7",
   "httpx>=0.27",
