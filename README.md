@@ -6,6 +6,10 @@ Minimal multi-turn coding RL engine in PyTorch, Triton, and vLLM under [shapens]
 
 `loop` builds a coding RLVR stack from scratch without a black-box trainer: PyTorch GRPO, a custom fused Triton online-LSE logprob kernel, vLLM LoRA hot-reload with SHA-256 weight verification, and hardened test grading. All training runs and kernel benchmarks below were reproduced on about $8 of Modal H100 compute, alongside local scaling benchmarks for sandboxed runs in [shapens/tri](https://github.com/shapens/tri).
 
+## Why this is useful
+
+Most multi-turn coding RL setups bury the hard failure modes inside large training frameworks or skip the systems bottlenecks that decide whether runs actually converge. You can read this whole codebase in an afternoon and reuse three concrete pieces directly: a drop-in fused Triton logprob kernel ([triton_logprob.py](src/loop/trainer/triton_logprob.py)) that cuts 152k-vocab step time by 2.67x and saves 3.5 GB of HBM (preventing k3 KL OOMs on 7B), a small PyTorch GRPO + vLLM LoRA loop with exact token-ID handoff and zero-gradient observation masking that reproduces end-to-end for ~$8 on burst H100s, and logged controlled runs showing why plain binary pass/fail with larger `G` beats partial-credit shaping and why hardened grading matters more than loss tuning.
+
 Full technical write-up, including negative results and scope caveats: [docs/memo.md](docs/memo.md).
 
 ## Results (NVIDIA H100 80GB)
