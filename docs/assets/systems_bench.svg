@@ -1,47 +1,53 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="860" height="320" viewBox="0 0 860 320" role="img" aria-label="Systems Benchmarks: shapens/tri Scaling &amp; Custom Triton Kernel">
-<style>text { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }.title { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; font-size: 14px; font-weight: 600; fill: #e6edf3; }.sub { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; font-size: 11px; fill: #8b949e; }.ax { font-size: 10px; fill: #8b949e; }.lbl { font-size: 11px; fill: #e6edf3; }.grid { stroke: #30363d; stroke-width: 1; stroke-dasharray: 2 3; }</style>
-<rect x="0.5" y="0.5" width="859" height="319" rx="10" fill="#0d1117" stroke="#30363d"/>
-<rect x="14" y="14" width="410" height="292" rx="8" fill="#161b22" stroke="#30363d"/>
-<text x="30" y="38" class="title">Sandbox Latency (c=1) &amp; Peak Throughput</text>
-<text x="30" y="54" class="sub">Local Seatbelt tri pool (66.5ms, 54.5/s) vs remote cloud Modal</text>
-<text x="30" y="78" class="lbl">local_subprocess (no isol.)</text>
-<text x="408" y="78" text-anchor="end" class="ax">127.1/s @c16</text>
-<rect x="30" y="84" width="18.0" height="10" rx="3" fill="#58a6ff" fill-opacity="0.28"/>
-<rect x="30" y="84" width="5.0" height="10" rx="3" fill="#58a6ff"/>
-<text x="30" y="106" class="ax">p50=34.7ms · p95=164ms</text>
-<text x="30" y="122" class="lbl">tri native + Seatbelt (WAL+batch)</text>
-<text x="408" y="122" text-anchor="end" class="ax">54.5/s @c16</text>
-<rect x="30" y="128" width="22.7" height="10" rx="3" fill="#3fb950" fill-opacity="0.28"/>
-<rect x="30" y="128" width="7.3" height="10" rx="3" fill="#3fb950"/>
-<text x="30" y="150" class="ax">p50=66.5ms · p95=206ms</text>
-<text x="30" y="166" class="lbl">tri HTTP v2 (WAL+batch)</text>
-<text x="408" y="166" text-anchor="end" class="ax">27.5/s @c16</text>
-<rect x="30" y="172" width="29.7" height="10" rx="3" fill="#39c5cf" fill-opacity="0.28"/>
-<rect x="30" y="172" width="14.7" height="10" rx="3" fill="#39c5cf"/>
-<text x="30" y="194" class="ax">p50=133.3ms · p95=270ms</text>
-<text x="30" y="210" class="lbl">tri HTTP v1 (12-req legacy)</text>
-<text x="408" y="210" text-anchor="end" class="ax">15.9/s @c16</text>
-<rect x="30" y="216" width="31.7" height="10" rx="3" fill="#bc8cff" fill-opacity="0.28"/>
-<rect x="30" y="216" width="16.3" height="10" rx="3" fill="#bc8cff"/>
-<text x="30" y="238" class="ax">p50=148.0ms · p95=288ms</text>
-<text x="30" y="254" class="lbl">Modal Sandbox (cloud gVisor)</text>
-<text x="408" y="254" text-anchor="end" class="ax">7.5/s @c8</text>
-<rect x="30" y="260" width="260.0" height="10" rx="3" fill="#d29922" fill-opacity="0.28"/>
-<rect x="30" y="260" width="113.6" height="10" rx="3" fill="#d29922"/>
-<text x="30" y="282" class="ax">p50=1031.6ms · p95=2361ms</text>
-<rect x="436" y="14" width="410" height="292" rx="8" fill="#161b22" stroke="#30363d"/>
-<text x="452" y="38" class="title">Custom Triton Fused LogProb Kernel (H100)</text>
-<text x="452" y="54" class="sub">Qwen 152k vocab [2, 2048, 152064] bf16 · fwd err 9.5e-07</text>
-<text x="452" y="96" class="lbl">Forward + Backward Step Time (2.67× faster)</text>
-<rect x="452" y="106" width="270" height="16" rx="4" fill="#8b949e" fill-opacity="0.35"/>
-<text x="730" y="118" class="ax">PyTorch 14.85ms</text>
-<rect x="452" y="128" width="101.3" height="16" rx="4" fill="#3fb950"/>
-<text x="561.3" y="140" class="lbl">Triton 5.57ms</text>
-<text x="452" y="182" class="lbl">Peak HBM Allocated (-3.48 GB saved)</text>
-<rect x="452" y="192" width="270" height="16" rx="4" fill="#8b949e" fill-opacity="0.35"/>
-<text x="730" y="204" class="ax">PyTorch 9.28 GB</text>
-<rect x="452" y="214" width="168.8" height="16" rx="4" fill="#39c5cf"/>
-<text x="628.8" y="226" class="lbl">Triton 5.80 GB</text>
-<text x="452" y="264" class="ax">bwd max abs err: 4.66e-10 · used for policy &amp; ref k3 KL</text>
-<text x="452" y="280" class="ax">eliminated 4.64 GiB fp32 softmax OOM on 7B long rollouts</text>
+<svg xmlns="http://www.w3.org/2000/svg" width="880" height="344" viewBox="0 0 880 344" role="img" aria-label="Triton Logprob Kernel and tri Run Benchmarks">
+<style>text { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }.title { font-family: -apple-system, BlinkMacSystemFont, 'Inter', 'Segoe UI', sans-serif; font-size: 14.5px; font-weight: 600; fill: #141413; letter-spacing: -0.01em; }.sub { font-family: -apple-system, BlinkMacSystemFont, 'Inter', 'Segoe UI', sans-serif; font-size: 11px; fill: #6F6A60; }.ax { font-size: 10px; fill: #6F6A60; }.leg { font-family: -apple-system, BlinkMacSystemFont, 'Inter', 'Segoe UI', sans-serif; font-size: 10.5px; fill: #141413; }.lbl { font-family: -apple-system, BlinkMacSystemFont, 'Inter', 'Segoe UI', sans-serif; font-size: 11.5px; font-weight: 500; fill: #141413; }.grid { stroke: #DDD6C9; stroke-width: 1; stroke-dasharray: 2 4; }.axis { stroke: #B8B0A2; stroke-width: 1.2; }</style>
+<rect x="0.5" y="0.5" width="879" height="343" rx="6" fill="#F5F2EB" stroke="#DDD6C9"/>
+<line x1="440.0" x2="440.0" y1="22" y2="322" stroke="#DDD6C9" stroke-width="1"/>
+<text x="26" y="34" class="title">tri run throughput and c=1 latency</text>
+<text x="26" y="51" class="sub">Local Seatbelt tri-server vs. tri v1/v2 and remote cloud Modal</text>
+<text x="26" y="84" class="lbl">local_subprocess (unsandboxed)</text>
+<text x="418" y="84" text-anchor="end" class="ax" style="fill:#141413;font-weight:600">127.1/s (c=16)</text>
+<rect x="26" y="91" width="392.0" height="8" rx="2" fill="#E7E1D5"/>
+<rect x="26" y="91" width="392.0" height="8" rx="2" fill="#8A8377"/>
+<text x="26" y="112" class="ax">c=1 p50 34.7 ms, p95 164 ms</text>
+<text x="26" y="133" class="lbl">tri-server + Seatbelt (WAL, batch)</text>
+<text x="418" y="133" text-anchor="end" class="ax" style="fill:#1C5D43;font-weight:600">54.5/s (c=16)</text>
+<rect x="26" y="140" width="392.0" height="8" rx="2" fill="#E7E1D5"/>
+<rect x="26" y="140" width="168.2" height="8" rx="2" fill="#1C5D43"/>
+<text x="26" y="161" class="ax">c=1 p50 66.5 ms, p95 206 ms</text>
+<text x="26" y="182" class="lbl">tri serve v2 (WAL, batch)</text>
+<text x="418" y="182" text-anchor="end" class="ax" style="fill:#141413;font-weight:600">27.5/s (c=16)</text>
+<rect x="26" y="189" width="392.0" height="8" rx="2" fill="#E7E1D5"/>
+<rect x="26" y="189" width="84.8" height="8" rx="2" fill="#2E5A88"/>
+<text x="26" y="210" class="ax">c=1 p50 133.3 ms, p95 270 ms</text>
+<text x="26" y="231" class="lbl">tri serve v1 (12-req legacy)</text>
+<text x="418" y="231" text-anchor="end" class="ax" style="fill:#141413;font-weight:600">15.9/s (c=16)</text>
+<rect x="26" y="238" width="392.0" height="8" rx="2" fill="#E7E1D5"/>
+<rect x="26" y="238" width="49.0" height="8" rx="2" fill="#7A4B7F"/>
+<text x="26" y="259" class="ax">c=1 p50 148.0 ms, p95 288 ms</text>
+<text x="26" y="280" class="lbl">Modal Sandbox (remote cloud gVisor)</text>
+<text x="418" y="280" text-anchor="end" class="ax" style="fill:#141413;font-weight:600">7.5/s (c=8)</text>
+<rect x="26" y="287" width="392.0" height="8" rx="2" fill="#E7E1D5"/>
+<rect x="26" y="287" width="23.1" height="8" rx="2" fill="#C6462B"/>
+<text x="26" y="308" class="ax">c=1 p50 1031.6 ms, p95 2361 ms</text>
+<text x="466" y="34" class="title">Triton fused logprob kernel (H100)</text>
+<text x="466" y="51" class="sub">Qwen 152k vocab [2, 2048, 152064] bf16, fwd err 9.5e-07</text>
+<text x="466" y="94" class="lbl">Forward + backward step time</text>
+<text x="854" y="94" text-anchor="end" class="ax" style="fill:#1C5D43;font-weight:600">2.67x faster</text>
+<rect x="466" y="106" width="276" height="14" rx="2" fill="#E7E1D5"/>
+<rect x="466" y="106" width="276" height="14" rx="2" fill="#8A8377" fill-opacity="0.55"/>
+<text x="854" y="117" text-anchor="end" class="ax">PyTorch 14.85 ms</text>
+<rect x="466" y="128" width="276" height="14" rx="2" fill="#E7E1D5"/>
+<rect x="466" y="128" width="103.5" height="14" rx="2" fill="#1C5D43"/>
+<text x="854" y="139" text-anchor="end" class="ax" style="fill:#1C5D43;font-weight:600">Triton 5.57 ms</text>
+<text x="466" y="190" class="lbl">Peak HBM allocated</text>
+<text x="854" y="190" text-anchor="end" class="ax" style="fill:#1C5D43;font-weight:600">-3.48 GB</text>
+<rect x="466" y="202" width="276" height="14" rx="2" fill="#E7E1D5"/>
+<rect x="466" y="202" width="276" height="14" rx="2" fill="#8A8377" fill-opacity="0.55"/>
+<text x="854" y="213" text-anchor="end" class="ax">PyTorch 9.28 GB</text>
+<rect x="466" y="224" width="276" height="14" rx="2" fill="#E7E1D5"/>
+<rect x="466" y="224" width="172.5" height="14" rx="2" fill="#141413"/>
+<text x="854" y="235" text-anchor="end" class="ax" style="fill:#141413;font-weight:600">Triton 5.80 GB</text>
+<line x1="466" x2="854" y1="268" y2="268" stroke="#DDD6C9" stroke-width="1"/>
+<text x="466" y="290" class="ax">bwd max abs err 4.66e-10, used for policy and k3 KL ref</text>
+<text x="466" y="308" class="ax">eliminated 4.64 GiB fp32 softmax OOM on 7B long rollouts</text>
 </svg>

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Generate clean, GitHub dark/light-compatible SVG charts from saved loop run JSONs."""
+"""Generate clean archival-editorial SVG charts from saved loop run JSONs."""
 
 from __future__ import annotations
 
@@ -13,40 +13,55 @@ from typing import Any
 def _e(s: str) -> str:
     return html.escape(s, quote=True)
 
+
 ROOT = Path(__file__).resolve().parents[1]
 RESULTS = ROOT / "results"
 ASSETS = ROOT / "docs" / "assets"
 
-BG = "#0d1117"
-CARD = "#161b22"
-BORDER = "#30363d"
-FG = "#e6edf3"
-MUTED = "#8b949e"
-C_GREEN = "#3fb950"
-C_BLUE = "#58a6ff"
-C_PURPLE = "#bc8cff"
-C_AMBER = "#d29922"
-C_RED = "#f85149"
-C_CYAN = "#39c5cf"
+# Warm archival paper editorial palette (legible on both GitHub light & dark themes)
+PAPER = "#F5F2EB"
+PAPER_DEEP = "#E7E1D5"
+RULE = "#DDD6C9"
+RULE_STRONG = "#B8B0A2"
+INK = "#141413"
+MUTED = "#6F6A60"
+
+C_FOREST = "#1C5D43"
+C_TERRA = "#C6462B"
+C_SLATE = "#2E5A88"
+C_OCHRE = "#B3741E"
+C_PLUM = "#7A4B7F"
+C_STONE = "#8A8377"
 
 
 def _svg_header(w: int, h: int, title: str) -> str:
     return (
         f'<svg xmlns="http://www.w3.org/2000/svg" width="{w}" height="{h}" '
         f'viewBox="0 0 {w} {h}" role="img" aria-label="{_e(title)}">\n'
-        f'<style>'
+        f"<style>"
         f"text {{ font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }}"
-        f".title {{ font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; "
-        f"font-size: 14px; font-weight: 600; fill: {FG}; }}"
-        f".sub {{ font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; "
+        f".title {{ font-family: -apple-system, BlinkMacSystemFont, 'Inter', 'Segoe UI', sans-serif; "
+        f"font-size: 14.5px; font-weight: 600; fill: {INK}; letter-spacing: -0.01em; }}"
+        f".sub {{ font-family: -apple-system, BlinkMacSystemFont, 'Inter', 'Segoe UI', sans-serif; "
         f"font-size: 11px; fill: {MUTED}; }}"
         f".ax {{ font-size: 10px; fill: {MUTED}; }}"
-        f".lbl {{ font-size: 11px; fill: {FG}; }}"
-        f".grid {{ stroke: {BORDER}; stroke-width: 1; stroke-dasharray: 2 3; }}"
+        f".leg {{ font-family: -apple-system, BlinkMacSystemFont, 'Inter', 'Segoe UI', sans-serif; "
+        f"font-size: 10.5px; fill: {INK}; }}"
+        f".lbl {{ font-family: -apple-system, BlinkMacSystemFont, 'Inter', 'Segoe UI', sans-serif; "
+        f"font-size: 11.5px; font-weight: 500; fill: {INK}; }}"
+        f".grid {{ stroke: {RULE}; stroke-width: 1; stroke-dasharray: 2 4; }}"
+        f".axis {{ stroke: {RULE_STRONG}; stroke-width: 1.2; }}"
         f"</style>\n"
-        f'<rect x="0.5" y="0.5" width="{w - 1}" height="{h - 1}" rx="10" '
-        f'fill="{BG}" stroke="{BORDER}"/>\n'
+        f'<rect x="0.5" y="0.5" width="{w - 1}" height="{h - 1}" rx="6" '
+        f'fill="{PAPER}" stroke="{RULE}"/>\n'
     )
+
+
+def _fmt_pct(v: float) -> str:
+    pct = v * 100.0
+    if abs(pct - round(pct)) < 0.05:
+        return f"{round(pct)}%"
+    return f"{pct:.1f}%"
 
 
 def _line_plot(
@@ -58,39 +73,45 @@ def _line_plot(
     title: str,
     subtitle: str,
     x_max: float,
+    x_min: float = 0.0,
     y_max: float,
+    y_ticks: list[float],
     x_ticks: list[int],
     y_fmt: str,
     series: list[dict[str, Any]],
     band: dict[str, Any] | None = None,
+    legend_cols: int | None = None,
 ) -> str:
     parts: list[str] = []
-    parts.append(
-        f'<rect x="{x0}" y="{y0}" width="{pw}" height="{ph}" rx="8" '
-        f'fill="{CARD}" stroke="{BORDER}"/>'
-    )
-    parts.append(f'<text x="{x0 + 16}" y="{y0 + 24}" class="title">{_e(title)}</text>')
-    parts.append(f'<text x="{x0 + 16}" y="{y0 + 40}" class="sub">{_e(subtitle)}</text>')
+    parts.append(f'<text x="{x0 + 18}" y="{y0 + 26}" class="title">{_e(title)}</text>')
+    parts.append(f'<text x="{x0 + 18}" y="{y0 + 43}" class="sub">{_e(subtitle)}</text>')
 
-    pl, pr, pt, pb = x0 + 48, x0 + pw - 18, y0 + 56, y0 + ph - 52
+    pl, pr, pt, pb = x0 + 50, x0 + pw - 20, y0 + 62, y0 + ph - 66
     iw, ih = pr - pl, pb - pt
+    x_span = max(x_max - x_min, 1e-9)
 
     def sx(v: float) -> float:
-        return pl + (v / max(x_max, 1e-9)) * iw
+        return pl + ((v - x_min) / x_span) * iw
 
     def sy(v: float) -> float:
         return pb - (min(max(v, 0.0), y_max) / max(y_max, 1e-9)) * ih
 
-    for i in range(5):
-        v = (y_max * i) / 4.0
+    for idx, v in enumerate(y_ticks):
         yy = sy(v)
-        parts.append(f'<line x1="{pl:.1f}" x2="{pr:.1f}" y1="{yy:.1f}" y2="{yy:.1f}" class="grid"/>')
-        lbl = f"{round(v * 100)}%" if y_fmt == "pct" else f"{v:.2f}"
-        parts.append(f'<text x="{pl - 8:.1f}" y="{yy + 3:.1f}" text-anchor="end" class="ax">{lbl}</text>')
+        cls = "axis" if idx == 0 else "grid"
+        parts.append(f'<line x1="{pl:.1f}" x2="{pr:.1f}" y1="{yy:.1f}" y2="{yy:.1f}" class="{cls}"/>')
+        if y_fmt == "pct":
+            lbl = f"{round(v * 100)}%"
+        elif y_fmt == "int":
+            lbl = f"{round(v)}"
+        else:
+            lbl = f"{v:.1f}"
+        parts.append(f'<text x="{pl - 9:.1f}" y="{yy + 3.5:.1f}" text-anchor="end" class="ax">{lbl}</text>')
 
-    for xt in x_ticks:
+    for idx, xt in enumerate(x_ticks):
         xx = sx(xt)
-        parts.append(f'<text x="{xx:.1f}" y="{pb + 15:.1f}" text-anchor="middle" class="ax">s{xt}</text>')
+        txt = f"Step {xt}" if idx == 0 else f"{xt}"
+        parts.append(f'<text x="{xx:.1f}" y="{pb + 17:.1f}" text-anchor="middle" class="ax">{txt}</text>')
 
     if band:
         xs, lo, hi, col = band["xs"], band["lo"], band["hi"], band["color"]
@@ -99,7 +120,7 @@ def _line_plot(
             f"{sx(x):.1f},{sy(y):.1f}"
             for x, y in reversed(list(zip(xs, lo, strict=True)))
         )
-        parts.append(f'<polygon points="{top} {bot}" fill="{col}" fill-opacity="0.16"/>')
+        parts.append(f'<polygon points="{top} {bot}" fill="{col}" fill-opacity="0.12"/>')
 
     for s in series:
         xs, ys, col = s["xs"], s["ys"], s["color"]
@@ -112,34 +133,39 @@ def _line_plot(
         dash = f' stroke-dasharray="{s["dash"]}"' if s.get("dash") else ""
         op = f' stroke-opacity="{s.get("opacity", 1.0)}"'
         parts.append(
-            f'<path d="{d}" fill="none" stroke="{col}" stroke-width="{s.get("width", 2.2)}"'
+            f'<path d="{d}" fill="none" stroke="{col}" stroke-width="{s.get("width", 2.3)}"'
             f'{dash}{op} stroke-linejoin="round" stroke-linecap="round"/>'
         )
         if s.get("dots", True):
+            r = s.get("r", 3.2)
             for x, y in zip(xs, ys, strict=True):
                 parts.append(
-                    f'<circle cx="{sx(x):.1f}" cy="{sy(y):.1f}" r="{s.get("r", 3.2)}" fill="{col}"/>'
+                    f'<circle cx="{sx(x):.1f}" cy="{sy(y):.1f}" r="{r}" fill="{col}" stroke="{PAPER}" stroke-width="1"/>'
                 )
 
-    # Legend row(s) — supports up to 5 items cleanly across 2 rows
-    lx, ly = x0 + 16, y0 + ph - 14
-    cols = 3 if len(series) > 4 else 2
-    col_w = (pw - 24) / cols
+    # Clean legend below x-axis with generous breathing room
+    lx = x0 + 18
+    cols = legend_cols or (3 if len(series) > 4 else 2)
+    col_w = (pw - 28) / cols
+    total_rows = (len(series) + cols - 1) // cols
+    base_y = pb + 38 if total_rows == 2 else pb + 46
     for idx, s in enumerate(series):
         col = s["color"]
         name = s["label"]
         cx = lx + (idx % cols) * col_w
         row_idx = idx // cols
-        total_rows = (len(series) + cols - 1) // cols
-        cy = ly - (total_rows - 1 - row_idx) * 14
+        cy = base_y + row_idx * 16
         if s.get("dash"):
             parts.append(
-                f'<line x1="{cx:.1f}" x2="{cx + 10:.1f}" y1="{cy - 3:.1f}" y2="{cy - 3:.1f}" '
+                f'<line x1="{cx:.1f}" x2="{cx + 12:.1f}" y1="{cy - 3.5:.1f}" y2="{cy - 3.5:.1f}" '
                 f'stroke="{col}" stroke-width="2" stroke-dasharray="3 2"/>'
             )
         else:
-            parts.append(f'<circle cx="{cx + 4:.1f}" cy="{cy - 3:.1f}" r="3.5" fill="{col}"/>')
-        parts.append(f'<text x="{cx + 14:.1f}" y="{cy:.1f}" class="ax">{_e(name)}</text>')
+            parts.append(
+                f'<line x1="{cx:.1f}" x2="{cx + 12:.1f}" y1="{cy - 3.5:.1f}" y2="{cy - 3.5:.1f}" '
+                f'stroke="{col}" stroke-width="2.4" stroke-linecap="round"/>'
+            )
+        parts.append(f'<text x="{cx + 17:.1f}" y="{cy:.1f}" class="leg">{_e(name)}</text>')
 
     return "\n".join(parts) + "\n"
 
@@ -162,42 +188,46 @@ def render_goodhart() -> None:
             out.append(float(m.get(name, 0.0)))
         return out
 
-    svg = _svg_header(860, 320, "Hardened vs Naive RLVR Goodhart Divergence")
+    w, h = 880, 344
+    svg = _svg_header(w, h, "Hardened vs Naive Grading on Qwen2.5-Coder-3B")
+    svg += f'<line x1="{w / 2:.1f}" x2="{w / 2:.1f}" y1="22" y2="{h - 22}" stroke="{RULE}" stroke-width="1"/>\n'
     svg += _line_plot(
-        14,
-        14,
-        410,
-        292,
-        title="Goodhart Divergence: Train Reward vs True Pass@1",
-        subtitle="Qwen2.5-Coder-3B · 20 GRPO steps · 1×H100 · Held-out 30×4",
+        8,
+        8,
+        424,
+        328,
+        title="Train reward vs. held-out pass@1",
+        subtitle="Qwen2.5-Coder-3B, 20 GRPO steps, 30 held-out tasks x 4",
         x_max=20,
         y_max=1.0,
+        y_ticks=[0.0, 0.25, 0.5, 0.75, 1.0],
         x_ticks=[0, 5, 10, 15, 20],
         y_fmt="pct",
-        band={"xs": e_steps, "lo": h_lo, "hi": h_hi, "color": C_GREEN},
+        band={"xs": e_steps, "lo": h_lo, "hi": h_hi, "color": C_FOREST},
         series=[
-            {"label": "Hardened pass@1 (38.3%)", "xs": e_steps, "ys": h_p1, "color": C_GREEN, "width": 2.6},
-            {"label": "Naive pass@1 (19.2%)", "xs": e_steps, "ys": n_p1, "color": C_PURPLE, "width": 2.4},
-            {"label": "Naive train rew (100%)", "xs": steps, "ys": [s["mean_reward"] for s in naive["steps"]], "color": C_RED, "width": 1.4, "dash": "3 3", "dots": False, "opacity": 0.8},
-            {"label": "Hardened train rew", "xs": steps, "ys": [s["mean_reward"] for s in hard["steps"]], "color": C_GREEN, "width": 1.4, "dash": "3 3", "dots": False, "opacity": 0.75},
+            {"label": "Hardened pass@1 (38.3%)", "xs": e_steps, "ys": h_p1, "color": C_FOREST, "width": 2.6},
+            {"label": "Naive pass@1 (19.2%)", "xs": e_steps, "ys": n_p1, "color": C_STONE, "width": 2.3},
+            {"label": "Naive train (100% peak)", "xs": steps, "ys": [s["mean_reward"] for s in naive["steps"]], "color": C_TERRA, "width": 1.6, "dash": "4 3", "dots": False, "opacity": 0.9},
+            {"label": "Hardened train reward", "xs": steps, "ys": [s["mean_reward"] for s in hard["steps"]], "color": C_FOREST, "width": 1.4, "dash": "3 3", "dots": False, "opacity": 0.65},
         ],
     )
     svg += _line_plot(
-        436,
-        14,
-        410,
-        292,
-        title="Per-Family Held-Out Pass@1 Breakdown",
-        subtitle="Hardened learns multi-file ledger fixes; Naive collapses to 0%",
+        448,
+        8,
+        424,
+        328,
+        title="Held-out pass@1 by task family",
+        subtitle="Hardened fixes multi-file ledger invariants; naive falls to 0%",
         x_max=20,
         y_max=1.0,
+        y_ticks=[0.0, 0.25, 0.5, 0.75, 1.0],
         x_ticks=[0, 5, 10, 15, 20],
         y_fmt="pct",
         series=[
-            {"label": "Hardened rate_limiter (92.5%)", "xs": e_steps, "ys": _fam(hard, "rate_limiter_window"), "color": C_BLUE, "width": 2.5},
-            {"label": "Hardened ledger (22.5%)", "xs": e_steps, "ys": _fam(hard, "ledger_invariants"), "color": C_GREEN, "width": 2.5},
-            {"label": "Naive rate_limiter (57.5%)", "xs": e_steps, "ys": _fam(naive, "rate_limiter_window"), "color": C_AMBER, "width": 1.8, "dash": "4 3", "r": 2.5},
-            {"label": "Naive ledger (0.0%)", "xs": e_steps, "ys": _fam(naive, "ledger_invariants"), "color": C_RED, "width": 1.8, "dash": "4 3", "r": 2.5},
+            {"label": "Hardened rate (92.5%)", "xs": e_steps, "ys": _fam(hard, "rate_limiter_window"), "color": C_SLATE, "width": 2.5},
+            {"label": "Hardened ledger (22.5%)", "xs": e_steps, "ys": _fam(hard, "ledger_invariants"), "color": C_FOREST, "width": 2.5},
+            {"label": "Naive rate (57.5%)", "xs": e_steps, "ys": _fam(naive, "rate_limiter_window"), "color": C_OCHRE, "width": 1.9, "dash": "4 3", "r": 2.6},
+            {"label": "Naive ledger (0.0%)", "xs": e_steps, "ys": _fam(naive, "ledger_invariants"), "color": C_TERRA, "width": 1.9, "dash": "4 3", "r": 2.6},
         ],
     )
     svg += "</svg>\n"
@@ -222,12 +252,12 @@ def render_async_mis() -> None:
     v_max = [s["tim"]["max_abs_logprob_diff"] for s in van["steps"]]
 
     left_series: list[dict[str, Any]] = [
-        {"label": f"lag=3 MIS ({m_p1[-1]*100:.1f}%)", "xs": e_steps, "ys": m_p1, "color": C_GREEN, "width": 2.6},
-        {"label": f"lag=3 Vanilla ({v_p1[-1]*100:.1f}%)", "xs": e_steps, "ys": v_p1, "color": C_BLUE, "width": 2.2, "dash": "4 3"},
+        {"label": f"lag=3 MIS ({m_p1[-1]*100:.1f}%)", "xs": e_steps, "ys": m_p1, "color": C_FOREST, "width": 2.6},
+        {"label": f"lag=3 Vanilla ({v_p1[-1]*100:.1f}%)", "xs": e_steps, "ys": v_p1, "color": C_SLATE, "width": 2.2, "dash": "4 3"},
     ]
     right_series: list[dict[str, Any]] = [
-        {"label": "lag=3 MIS max|Δlog p|", "xs": steps, "ys": m_max, "color": C_GREEN, "width": 2.0},
-        {"label": "lag=3 Vanilla max|Δlog p|", "xs": steps, "ys": v_max, "color": C_BLUE, "width": 1.8, "dash": "3 2"},
+        {"label": "lag=3 MIS", "xs": steps, "ys": m_max, "color": C_FOREST, "width": 2.1},
+        {"label": "lag=3 Vanilla", "xs": steps, "ys": v_max, "color": C_SLATE, "width": 1.9, "dash": "4 3"},
     ]
     all_max_vals = list(m_max) + list(v_max)
     if p_van8.exists() and p_mis8.exists():
@@ -241,43 +271,52 @@ def render_async_mis() -> None:
         s8_steps = [s["step"] for s in mis8["steps"]]
         left_series.extend(
             [
-                {"label": f"lag=8 MIS ({m8_p1[-1]*100:.1f}%)", "xs": e8_steps, "ys": m8_p1, "color": C_CYAN, "width": 2.4},
-                {"label": f"lag=8 Vanilla ({v8_p1[-1]*100:.1f}%)", "xs": e8_steps, "ys": v8_p1, "color": C_RED, "width": 2.2, "dash": "4 3"},
+                {"label": f"lag=8 MIS ({m8_p1[-1]*100:.1f}%)", "xs": e8_steps, "ys": m8_p1, "color": C_OCHRE, "width": 2.3},
+                {"label": f"lag=8 Vanilla ({v8_p1[-1]*100:.1f}%)", "xs": e8_steps, "ys": v8_p1, "color": C_TERRA, "width": 2.1, "dash": "4 3"},
             ]
         )
         right_series.extend(
             [
-                {"label": "lag=8 MIS max|Δlog p|", "xs": s8_steps, "ys": m8_max, "color": C_CYAN, "width": 2.2},
-                {"label": "lag=8 Vanilla max|Δlog p|", "xs": s8_steps, "ys": v8_max, "color": C_RED, "width": 2.0, "dash": "3 2"},
+                {"label": "lag=8 MIS", "xs": s8_steps, "ys": m8_max, "color": C_OCHRE, "width": 2.1},
+                {"label": "lag=8 Vanilla", "xs": s8_steps, "ys": v8_max, "color": C_TERRA, "width": 2.0, "dash": "4 3"},
             ]
         )
         all_max_vals.extend(m8_max + v8_max)
 
-    svg = _svg_header(860, 325, "Async Off-Policy Staleness (lag=3 vs lag=8): Vanilla GRPO vs MIS")
+    peak_drift = max(all_max_vals)
+    y_top = float(int(peak_drift) + 1)
+    y_int_ticks = [float(i) for i in range(int(y_top) + 1)]
+
+    w, h = 880, 344
+    svg = _svg_header(w, h, "Async Off-Policy Staleness (lag=3 vs lag=8): Vanilla GRPO vs MIS")
+    svg += f'<line x1="{w / 2:.1f}" x2="{w / 2:.1f}" y1="22" y2="{h - 22}" stroke="{RULE}" stroke-width="1"/>\n'
     svg += _line_plot(
-        14,
-        14,
-        410,
-        297,
-        title="Async Staleness (lag=3 vs lag=8): Held-Out Pass@1",
-        subtitle="Qwen2.5-Coder-3B · 5 families · lag=8 MIS 3× faster at s5 (18% vs 6%)",
+        8,
+        8,
+        424,
+        328,
+        title="Async staleness (lag=3 vs. lag=8): pass@1",
+        subtitle="Qwen2.5-Coder-3B, 5 families; lag=8 MIS 3x faster at step 5 (18% vs 6%)",
         x_max=max_s,
         y_max=0.5,
+        y_ticks=[0.0, 0.1, 0.2, 0.3, 0.4, 0.5],
         x_ticks=[0, 5, 10, 15, max_s],
         y_fmt="pct",
         series=left_series,
     )
     svg += _line_plot(
-        436,
-        14,
-        410,
-        297,
-        title="Max Off-Policy LogProb Drift |log π_train - log π_vLLM|",
-        subtitle="lag=8, kl=0 drives max |Δlog p| to 4.67 (106× ratio spikes)",
+        448,
+        8,
+        424,
+        328,
+        title="Max off-policy logprob drift",
+        subtitle=f"lag=8, kl=0 reaches max |delta log p| = {peak_drift:.2f} (106x ratio)",
+        x_min=1,
         x_max=max_s,
-        y_max=max(5.0, max(all_max_vals) * 1.15),
+        y_max=y_top,
+        y_ticks=y_int_ticks,
         x_ticks=[1, 5, 10, 15, max_s],
-        y_fmt="num",
+        y_fmt="int",
         series=right_series,
     )
     svg += "</svg>\n"
@@ -311,40 +350,44 @@ def render_sparse_curriculum() -> None:
     cp1 = [e["report"]["pass_at_k"]["1"]["mean"] for e in r_cur["evals"]]
     cp4 = [e["report"]["pass_at_k"]["4"]["mean"] for e in r_cur["evals"]]
 
-    svg = _svg_header(860, 330, "7B Sparse-Family Ablation: Sub-Test Shaping vs Binary G=16 Curriculum")
+    w, h = 880, 344
+    svg = _svg_header(w, h, "Binary vs Sub-Test Rewards on Qwen2.5-Coder-7B")
+    svg += f'<line x1="{w / 2:.1f}" x2="{w / 2:.1f}" y1="22" y2="{h - 22}" stroke="{RULE}" stroke-width="1"/>\n'
     svg += _line_plot(
-        14,
-        14,
-        410,
-        302,
-        title="Breaking the 3-File Sparse Wall (keyset_paging Pass@1)",
-        subtitle="Sub-test shaping stays 0%; Binary G=16 curriculum jumps 0% -> 70%!",
+        8,
+        8,
+        424,
+        328,
+        title="keyset_paging held-out pass@1 (Qwen-7B)",
+        subtitle="Sub-test shaping stays at 0%; binary G=16 curriculum reaches 70%",
         x_max=20,
         y_max=1.0,
+        y_ticks=[0.0, 0.25, 0.5, 0.75, 1.0],
         x_ticks=[0, 5, 10, 15, 20],
         y_fmt="pct",
         series=[
-            {"label": f"Binary G=16 Curriculum ({ck[-1]*100:.0f}%)", "xs": cx, "ys": ck, "color": C_GREEN, "width": 2.8},
-            {"label": f"Binary All-5 G=8 ({bk[-1]*100:.1f}%)", "xs": bx, "ys": bk, "color": C_BLUE, "width": 2.2},
-            {"label": f"Sub-Test Shaping G=8 ({sk[-1]*100:.1f}%)", "xs": sx, "ys": sk, "color": C_RED, "width": 2.2, "dash": "4 3"},
+            {"label": f"Binary G=16 curriculum ({_fmt_pct(ck[-1])})", "xs": cx, "ys": ck, "color": C_FOREST, "width": 2.8},
+            {"label": f"Binary G=8 all-5 ({_fmt_pct(bk[-1])})", "xs": bx, "ys": bk, "color": C_SLATE, "width": 2.2},
+            {"label": f"Sub-test G=8 ({_fmt_pct(sk[-1])})", "xs": sx, "ys": sk, "color": C_TERRA, "width": 2.2, "dash": "4 3"},
         ],
     )
     svg += _line_plot(
-        436,
-        14,
-        410,
-        302,
-        title="Overall 5-Family Held-Out Accuracy (50 Tasks × 4)",
-        subtitle="Sub-test shaping hurts -9.5pp; G=16 hits new high pass@4=68.0%",
+        448,
+        8,
+        424,
+        328,
+        title="All-5 held-out accuracy (50 tasks x 4)",
+        subtitle="Sub-test shaping trails binary by 9.5 pp; G=16 reaches 68.0% pass@4",
         x_max=20,
         y_max=1.0,
+        y_ticks=[0.0, 0.25, 0.5, 0.75, 1.0],
         x_ticks=[0, 5, 10, 15, 20],
         y_fmt="pct",
         series=[
-            {"label": f"G=16 Curric. p@4 ({cp4[-1]*100:.1f}%)", "xs": cx, "ys": cp4, "color": C_CYAN, "width": 2.5, "dash": "3 2"},
-            {"label": f"Binary All-5 p@1 ({bp1[-1]*100:.1f}%)", "xs": bx, "ys": bp1, "color": C_BLUE, "width": 2.6},
-            {"label": f"G=16 Curric. p@1 ({cp1[-1]*100:.1f}%)", "xs": cx, "ys": cp1, "color": C_GREEN, "width": 2.6},
-            {"label": f"Sub-Test G=8 p@1 ({sp1[-1]*100:.1f}%)", "xs": sx, "ys": sp1, "color": C_RED, "width": 2.2, "dash": "4 3"},
+            {"label": f"G=16 pass@4 ({cp4[-1]*100:.1f}%)", "xs": cx, "ys": cp4, "color": C_FOREST, "width": 2.2, "dash": "3 3"},
+            {"label": f"Binary G=8 pass@1 ({bp1[-1]*100:.1f}%)", "xs": bx, "ys": bp1, "color": C_SLATE, "width": 2.6},
+            {"label": f"G=16 pass@1 ({cp1[-1]*100:.1f}%)", "xs": cx, "ys": cp1, "color": C_FOREST, "width": 2.6},
+            {"label": f"Sub-test G=8 pass@1 ({sp1[-1]*100:.1f}%)", "xs": sx, "ys": sp1, "color": C_TERRA, "width": 2.2, "dash": "4 3"},
         ],
     )
     svg += "</svg>\n"
@@ -364,7 +407,7 @@ def render_7b_headline() -> None:
     p4 = [e["report"]["pass_at_k"]["4"]["mean"] for e in run["evals"]]
 
     fams = ["rate_limiter_window", "async_keyed_queue", "spec_invoice_calc", "ledger_invariants", "keyset_paging"]
-    colors = [C_BLUE, C_GREEN, C_CYAN, C_AMBER, C_PURPLE]
+    colors = [C_SLATE, C_FOREST, C_STONE, C_OCHRE, C_PLUM]
     fam_series = []
     for fam, col in zip(fams, colors, strict=True):
         ys = []
@@ -372,38 +415,43 @@ def render_7b_headline() -> None:
             m = {f["family"]: f["pass_at_1"] for f in e["report"]["by_family"]}
             ys.append(float(m.get(fam, 0.0)))
         short = fam.split("_")[0]
-        fam_series.append({"label": f"{short} ({ys[-1]*100:.0f}%)", "xs": e_steps, "ys": ys, "color": col, "width": 2.2})
+        fam_series.append({"label": f"{short} ({_fmt_pct(ys[-1])})", "xs": e_steps, "ys": ys, "color": col, "width": 2.3})
 
-    svg = _svg_header(860, 330, "Qwen2.5-Coder-7B 5-Family RLVR Results")
+    w, h = 880, 344
+    svg = _svg_header(w, h, "Qwen2.5-Coder-7B 5-Family RL Results")
+    svg += f'<line x1="{w / 2:.1f}" x2="{w / 2:.1f}" y1="22" y2="{h - 22}" stroke="{RULE}" stroke-width="1"/>\n'
     svg += _line_plot(
-        14,
-        14,
-        410,
-        302,
-        title="Qwen2.5-Coder-7B · Overall Held-Out Pass@k",
-        subtitle="5 families · 50 held-out tasks × 4 samples · Fused Triton kernel",
+        8,
+        8,
+        424,
+        328,
+        title="Qwen2.5-Coder-7B held-out pass@k",
+        subtitle="5 families, 50 held-out tasks x 4 samples, fused Triton kernel",
         x_max=max_s,
         y_max=1.0,
+        y_ticks=[0.0, 0.25, 0.5, 0.75, 1.0],
         x_ticks=e_steps,
         y_fmt="pct",
-        band={"xs": e_steps, "lo": lo, "hi": hi, "color": C_GREEN},
+        band={"xs": e_steps, "lo": lo, "hi": hi, "color": C_FOREST},
         series=[
-            {"label": f"pass@4 ({p4[0]*100:.1f}% -> {p4[-1]*100:.1f}%)", "xs": e_steps, "ys": p4, "color": C_BLUE, "width": 2.5},
-            {"label": f"pass@1 ({p1[0]*100:.1f}% -> {p1[-1]*100:.1f}%)", "xs": e_steps, "ys": p1, "color": C_GREEN, "width": 2.6},
+            {"label": f"pass@4 ({p4[0]*100:.1f}% to {p4[-1]*100:.1f}%)", "xs": e_steps, "ys": p4, "color": C_SLATE, "width": 2.5},
+            {"label": f"pass@1 ({p1[0]*100:.1f}% to {p1[-1]*100:.1f}%)", "xs": e_steps, "ys": p1, "color": C_FOREST, "width": 2.6},
         ],
     )
     svg += _line_plot(
-        436,
-        14,
-        410,
-        302,
-        title="7B Held-Out Pass@1 Across All 5 Coding Families",
-        subtitle="async_keyed_queue jumps 7.5% -> 57.5%; ledger 70% -> 97.5%",
+        448,
+        8,
+        424,
+        328,
+        title="Held-out pass@1 across all 5 families",
+        subtitle="async_keyed_queue 7.5% to 57.5%; ledger 70.0% to 97.5%",
         x_max=max_s,
         y_max=1.0,
+        y_ticks=[0.0, 0.25, 0.5, 0.75, 1.0],
         x_ticks=e_steps,
         y_fmt="pct",
         series=fam_series,
+        legend_cols=3,
     )
     svg += "</svg>\n"
     (ASSETS / "headline_7b_5fam.svg").write_text(svg, encoding="utf-8")
@@ -421,53 +469,66 @@ def render_systems_bench() -> None:
     c16 = {r["backend"]: r for r in sb if r["concurrency"] == 16}
     c8 = {r["backend"]: r for r in sb if r["concurrency"] == 8}
 
-    svg = _svg_header(860, 320, "Systems Benchmarks: shapens/tri Scaling & Custom Triton Kernel")
-    svg += f'<rect x="14" y="14" width="410" height="292" rx="8" fill="{CARD}" stroke="{BORDER}"/>\n'
-    svg += '<text x="30" y="38" class="title">Sandbox Latency (c=1) &amp; Peak Throughput</text>\n'
-    svg += '<text x="30" y="54" class="sub">Local Seatbelt tri pool (66.5ms, 54.5/s) vs remote cloud Modal</text>\n'
+    w, h = 880, 344
+    svg = _svg_header(w, h, "Triton Logprob Kernel and tri Run Benchmarks")
+    svg += f'<line x1="{w / 2:.1f}" x2="{w / 2:.1f}" y1="22" y2="{h - 22}" stroke="{RULE}" stroke-width="1"/>\n'
+
+    # Left panel: Throughput bars (cleanly compares tri v1, v2, Seatbelt, and Modal)
+    svg += '<text x="26" y="34" class="title">tri run throughput and c=1 latency</text>\n'
+    svg += '<text x="26" y="51" class="sub">Local Seatbelt tri-server vs. tri v1/v2 and remote cloud Modal</text>\n'
     rows = [
-        ("local_subprocess (no isol.)", c1["local_subprocess"], c16["local_subprocess"], "@c16", C_BLUE),
-        ("tri native + Seatbelt (WAL+batch)", c1["shapens_tri_native_seatbelt"], c16["shapens_tri_native_seatbelt"], "@c16", C_GREEN),
-        ("tri HTTP v2 (WAL+batch)", c1["shapens_tri_http_v2_batch"], c16["shapens_tri_http_v2_batch"], "@c16", C_CYAN),
-        ("tri HTTP v1 (12-req legacy)", c1["shapens_tri_http_v1"], c16["shapens_tri_http_v1"], "@c16", C_PURPLE),
-        ("Modal Sandbox (cloud gVisor)", c1["modal_sandbox_ephemeral"], c8["modal_sandbox_ephemeral"], "@c8", C_AMBER),
+        ("local_subprocess (unsandboxed)", c1["local_subprocess"], c16["local_subprocess"], "c=16", C_STONE),
+        ("tri-server + Seatbelt (WAL, batch)", c1["shapens_tri_native_seatbelt"], c16["shapens_tri_native_seatbelt"], "c=16", C_FOREST),
+        ("tri serve v2 (WAL, batch)", c1["shapens_tri_http_v2_batch"], c16["shapens_tri_http_v2_batch"], "c=16", C_SLATE),
+        ("tri serve v1 (12-req legacy)", c1["shapens_tri_http_v1"], c16["shapens_tri_http_v1"], "c=16", C_PLUM),
+        ("Modal Sandbox (remote cloud gVisor)", c1["modal_sandbox_ephemeral"], c8["modal_sandbox_ephemeral"], "c=8", C_TERRA),
     ]
-    max_ms = max(r["p95_ms"] for r in c1.values())
+    max_tp = max(r[2]["throughput_per_sec"] for r in rows)
+    bar_w = 392.0
     for idx, (label, r1, rpk, tag, col) in enumerate(rows):
-        y = 78 + idx * 44
-        w50 = max(5.0, (r1["p50_ms"] / max_ms) * 260.0)
-        w95 = max(5.0, (r1["p95_ms"] / max_ms) * 260.0)
-        svg += f'<text x="30" y="{y}" class="lbl">{_e(label)}</text>\n'
-        svg += f'<text x="408" y="{y}" text-anchor="end" class="ax">{rpk["throughput_per_sec"]:.1f}/s {tag}</text>\n'
-        svg += f'<rect x="30" y="{y + 6}" width="{w95:.1f}" height="10" rx="3" fill="{col}" fill-opacity="0.28"/>\n'
-        svg += f'<rect x="30" y="{y + 6}" width="{w50:.1f}" height="10" rx="3" fill="{col}"/>\n'
+        y = 84 + idx * 49
+        tp = rpk["throughput_per_sec"]
+        bw = max(6.0, (tp / max_tp) * bar_w)
+        svg += f'<text x="26" y="{y}" class="lbl">{_e(label)}</text>\n'
+        svg += f'<text x="418" y="{y}" text-anchor="end" class="ax" style="fill:{col if col == C_FOREST else INK};font-weight:600">{tp:.1f}/s ({tag})</text>\n'
+        svg += f'<rect x="26" y="{y + 7}" width="{bar_w:.1f}" height="8" rx="2" fill="{PAPER_DEEP}"/>\n'
+        svg += f'<rect x="26" y="{y + 7}" width="{bw:.1f}" height="8" rx="2" fill="{col}"/>\n'
         svg += (
-            f'<text x="30" y="{y + 28}" class="ax">'
-            f'p50={r1["p50_ms"]:.1f}ms · p95={r1["p95_ms"]:.0f}ms</text>\n'
+            f'<text x="26" y="{y + 28}" class="ax">'
+            f'c=1 p50 {r1["p50_ms"]:.1f} ms, p95 {r1["p95_ms"]:.0f} ms</text>\n'
         )
 
-    # Right card: Triton H100 kernel vs PyTorch
-    svg += f'<rect x="436" y="14" width="410" height="292" rx="8" fill="{CARD}" stroke="{BORDER}"/>\n'
-    svg += '<text x="452" y="38" class="title">Custom Triton Fused LogProb Kernel (H100)</text>\n'
-    svg += f'<text x="452" y="54" class="sub">Qwen 152k vocab [2, 2048, 152064] bf16 · fwd err {tr["fwd_max_abs_err"]:.1e}</text>\n'
+    # Right panel: Triton H100 kernel vs PyTorch
+    svg += '<text x="466" y="34" class="title">Triton fused logprob kernel (H100)</text>\n'
+    svg += f'<text x="466" y="51" class="sub">Qwen 152k vocab [2, 2048, 152064] bf16, fwd err {tr["fwd_max_abs_err"]:.1e}</text>\n'
 
+    bar_x = 466.0
+    bar_r_w = 276.0
     pt_ms, tr_ms = tr["pytorch_ms"], tr["triton_ms"]
-    svg += f'<text x="452" y="96" class="lbl">Forward + Backward Step Time ({tr["speedup_x"]}× faster)</text>\n'
-    svg += f'<rect x="452" y="106" width="270" height="16" rx="4" fill="{MUTED}" fill-opacity="0.35"/>\n'
-    svg += f'<text x="730" y="118" class="ax">PyTorch {pt_ms:.2f}ms</text>\n'
-    tw = (tr_ms / pt_ms) * 270.0
-    svg += f'<rect x="452" y="128" width="{tw:.1f}" height="16" rx="4" fill="{C_GREEN}"/>\n'
-    svg += f'<text x="{460 + tw:.1f}" y="140" class="lbl">Triton {tr_ms:.2f}ms</text>\n'
+    svg += f'<text x="466" y="94" class="lbl">Forward + backward step time</text>\n'
+    svg += f'<text x="854" y="94" text-anchor="end" class="ax" style="fill:{C_FOREST};font-weight:600">{tr["speedup_x"]}x faster</text>\n'
+    svg += f'<rect x="{bar_x:.0f}" y="106" width="{bar_r_w:.0f}" height="14" rx="2" fill="{PAPER_DEEP}"/>\n'
+    svg += f'<rect x="{bar_x:.0f}" y="106" width="{bar_r_w:.0f}" height="14" rx="2" fill="{C_STONE}" fill-opacity="0.55"/>\n'
+    svg += f'<text x="854" y="117" text-anchor="end" class="ax">PyTorch {pt_ms:.2f} ms</text>\n'
+    tw = (tr_ms / pt_ms) * bar_r_w
+    svg += f'<rect x="{bar_x:.0f}" y="128" width="{bar_r_w:.0f}" height="14" rx="2" fill="{PAPER_DEEP}"/>\n'
+    svg += f'<rect x="{bar_x:.0f}" y="128" width="{tw:.1f}" height="14" rx="2" fill="{C_FOREST}"/>\n'
+    svg += f'<text x="854" y="139" text-anchor="end" class="ax" style="fill:{C_FOREST};font-weight:600">Triton {tr_ms:.2f} ms</text>\n'
 
     pt_gb, tr_gb = tr["pytorch_peak_gb"], tr["triton_peak_gb"]
-    svg += f'<text x="452" y="182" class="lbl">Peak HBM Allocated (-{tr["vram_saved_gb"]:.2f} GB saved)</text>\n'
-    svg += f'<rect x="452" y="192" width="270" height="16" rx="4" fill="{MUTED}" fill-opacity="0.35"/>\n'
-    svg += f'<text x="730" y="204" class="ax">PyTorch {pt_gb:.2f} GB</text>\n'
-    gw = (tr_gb / pt_gb) * 270.0
-    svg += f'<rect x="452" y="214" width="{gw:.1f}" height="16" rx="4" fill="{C_CYAN}"/>\n'
-    svg += f'<text x="{460 + gw:.1f}" y="226" class="lbl">Triton {tr_gb:.2f} GB</text>\n'
-    svg += f'<text x="452" y="264" class="ax">bwd max abs err: {tr["bwd_max_abs_err"]:.2e} · used for policy &amp; ref k3 KL</text>\n'
-    svg += f'<text x="452" y="280" class="ax">eliminated 4.64 GiB fp32 softmax OOM on 7B long rollouts</text>\n'
+    svg += f'<text x="466" y="190" class="lbl">Peak HBM allocated</text>\n'
+    svg += f'<text x="854" y="190" text-anchor="end" class="ax" style="fill:{C_FOREST};font-weight:600">-{tr["vram_saved_gb"]:.2f} GB</text>\n'
+    svg += f'<rect x="{bar_x:.0f}" y="202" width="{bar_r_w:.0f}" height="14" rx="2" fill="{PAPER_DEEP}"/>\n'
+    svg += f'<rect x="{bar_x:.0f}" y="202" width="{bar_r_w:.0f}" height="14" rx="2" fill="{C_STONE}" fill-opacity="0.55"/>\n'
+    svg += f'<text x="854" y="213" text-anchor="end" class="ax">PyTorch {pt_gb:.2f} GB</text>\n'
+    gw = (tr_gb / pt_gb) * bar_r_w
+    svg += f'<rect x="{bar_x:.0f}" y="224" width="{bar_r_w:.0f}" height="14" rx="2" fill="{PAPER_DEEP}"/>\n'
+    svg += f'<rect x="{bar_x:.0f}" y="224" width="{gw:.1f}" height="14" rx="2" fill="{INK}"/>\n'
+    svg += f'<text x="854" y="235" text-anchor="end" class="ax" style="fill:{INK};font-weight:600">Triton {tr_gb:.2f} GB</text>\n'
+
+    svg += f'<line x1="466" x2="854" y1="268" y2="268" stroke="{RULE}" stroke-width="1"/>\n'
+    svg += f'<text x="466" y="290" class="ax">bwd max abs err {tr["bwd_max_abs_err"]:.2e}, used for policy and k3 KL ref</text>\n'
+    svg += '<text x="466" y="308" class="ax">eliminated 4.64 GiB fp32 softmax OOM on 7B long rollouts</text>\n'
 
     svg += "</svg>\n"
     (ASSETS / "systems_bench.svg").write_text(svg, encoding="utf-8")
