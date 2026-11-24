@@ -11,6 +11,7 @@ from loop.trainer.engine import (
     compute_shifted_logprobs,
     grpo_train_step,
 )
+from loop.trainer.triton_logprob import fused_shifted_logprobs
 from loop.types import Trajectory, VerifierReceipt
 
 
@@ -50,12 +51,14 @@ def test_compute_shifted_logprobs_matches_explicit_log_softmax() -> None:
     input_ids = torch.randint(0, 11, (2, 6))
 
     fast = compute_shifted_logprobs(logits, input_ids)
+    fused = fused_shifted_logprobs(logits, input_ids)
     expected = (
         torch.log_softmax(logits[:, :-1, :], dim=-1)
         .gather(-1, input_ids[:, 1:].unsqueeze(-1))
         .squeeze(-1)
     )
     assert torch.allclose(fast, expected, atol=1e-5)
+    assert torch.allclose(fused, expected, atol=1e-5)
 
 
 def test_grpo_train_step_updates_weights_and_verifies_export(tmp_path: Path) -> None:

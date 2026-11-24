@@ -143,8 +143,8 @@ def run_colocated_grpo(
     eval_history: list[dict[str, Any]] = []
     step_history: list[dict[str, Any]] = []
 
-    current_lora: Any | None = None
-    eval_0 = run_eval(0, current_lora)
+    lora_history: list[Any | None] = [None]
+    eval_0 = run_eval(0, None)
     eval_history.append({"step": 0, "report": eval_0})
 
     for step in range(1, cfg.steps + 1):
@@ -152,15 +152,18 @@ def run_colocated_grpo(
         batch_tasks = [
             train_pool[(start_i + j) % len(train_pool)] for j in range(cfg.tasks_per_step)
         ]
+        rollout_policy_idx = max(0, (step - 1) - cfg.stale_steps)
+        rollout_lora = lora_history[rollout_policy_idx]
+
         t_rollout_wall = time.perf_counter()
         trajs = run_episodes_batched(
             batch_tasks,
             samples_per_task=cfg.group_size,
-            generate_batch=make_generator(temperature=cfg.temperature, lora_req=current_lora),
+            generate_batch=make_generator(temperature=cfg.temperature, lora_req=rollout_lora),
             tokenize=tokenize,
             sandbox=sandbox,
             max_turns=cfg.max_turns,
-            policy_version=step - 1,
+            policy_version=rollout_policy_idx,
             grader_mode=cfg.grader_mode,
         )
         total_rollout_wall_ms = (time.perf_counter() - t_rollout_wall) * 1000.0
@@ -180,28 +183,32 @@ def run_colocated_grpo(
             rollout_wall_ms=gen_wall_ms,
             sandbox_wall_ms=sb_wall_ms,
         )
-        current_lora = LoRARequest(f"step_{step:04d}", step, str(adapter_dir))
+        latest_lora = LoRARequest(f"step_{step:04d}", step, str(adapter_dir))
+        lora_history.append(latest_lora)
 
         rec = {
             **asdict(metrics),
+            "rollout_policy_version": rollout_policy_idx,
             "timing_fractions": metrics.timing.fractions(),
         }
         step_history.append(rec)
         with metrics_path.open("a", encoding="utf-8") as fh:
             fh.write(json.dumps(rec) + "\n")
         print(
-            f"[step {step}/{cfg.steps}] reward={metrics.mean_reward:.3f} "
+            f"[step {step}/{cfg.steps} lag={step - 1 - rollout_policy_idx}] "
+            f"reward={metrics.mean_reward:.3f} "
             f"pass={metrics.pass_rate:.3f} tamper={metrics.tamper_rate:.3f} "
             f"loss={metrics.loss:.4f} gnorm={metrics.grad_norm:.3f} "
             f"tim_mean={metrics.tim.mean_abs_logprob_diff:.4f} "
             f"tim_max={metrics.tim.max_abs_logprob_diff:.4f} "
-            f"mis_masked={metrics.tim.masked_token_fraction:.3f} "
+            f"hi_r={metrics.tim.high_ratio_fraction:.4f} "
+            f"mis_masked={metrics.tim.masked_token_fraction:.4f} "
             f"sync_ms={metrics.timing.weight_sync_ms:.0f}",
             flush=True,
         )
 
         if step % cfg.eval_every == 0 or step == cfg.steps:
-            ev = run_eval(step, current_lora)
+            ev = run_eval(step, latest_lora)
             eval_history.append({"step": step, "report": ev})
             p1 = ev["pass_at_k"][1]["mean"]
             p4 = ev["pass_at_k"].get(4, {}).get("mean", 0.0)

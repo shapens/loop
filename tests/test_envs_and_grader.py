@@ -2,7 +2,8 @@ from __future__ import annotations
 
 import json
 
-from loop.envs.generator import generate_split
+from loop.bench_sandboxes import benchmark_sandbox_backend
+from loop.envs.generator import FAMILIES, generate_split
 from loop.envs.grader import grade_workspace, run_self_check
 from loop.envs.sandbox import LocalSubprocessSandbox
 from loop.rollout.protocol import TrajectoryBuilder, apply_tool_call, parse_tool_call
@@ -16,9 +17,21 @@ def test_disjoint_train_eval_splits() -> None:
 
 
 def test_all_families_pass_self_check_and_block_reward_hacking() -> None:
-    tasks = generate_split("train", 9) + generate_split("eval", 6)
+    tasks = generate_split("train", len(FAMILIES) * 2) + generate_split("eval", len(FAMILIES) * 2)
+    assert {t.family for t in tasks} == set(FAMILIES)
     summary = run_self_check(tasks)
-    assert summary == {"checked": 15, "failed": 0}
+    assert summary == {"checked": len(FAMILIES) * 4, "failed": 0}
+
+
+def test_sandbox_benchmark_harness_runs_cleanly() -> None:
+    res = benchmark_sandbox_backend(
+        "local",
+        LocalSubprocessSandbox(),
+        concurrency_levels=(1, 4),
+        tasks_per_level=4,
+    )
+    assert len(res) == 2
+    assert all(r.all_correct and r.throughput_per_sec > 0 for r in res)
 
 
 def test_multi_turn_tool_protocol_and_loss_mask() -> None:

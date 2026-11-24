@@ -193,6 +193,25 @@ if _modal is not None:
     @app.function(
         image=gpu_image,
         gpu="H100",
+        timeout=300,
+    )
+    def bench_triton_kernel_modal(
+        batch_size: int = 2,
+        seq_len: int = 2048,
+        vocab_size: int = 152_064,
+    ) -> dict[str, Any]:
+        """Benchmark fused Triton online-LSE logprobs vs eager PyTorch on H100."""
+        from loop.trainer.triton_logprob import benchmark_triton_vs_pytorch
+
+        return benchmark_triton_vs_pytorch(
+            batch_size=batch_size,
+            seq_len=seq_len,
+            vocab_size=vocab_size,
+        )
+
+    @app.function(
+        image=gpu_image,
+        gpu="H100",
         timeout=3600,
         volumes={"/weights": weights_vol},
     )
@@ -202,7 +221,11 @@ if _modal is not None:
         steps: int = 12,
         tasks_per_step: int = 4,
         group_size: int = 8,
+        learning_rate: float = 2e-5,
         use_mis: bool = True,
+        mis_max_ratio: float = 2.0,
+        stale_steps: int = 0,
+        micro_batch_size: int = 2,
         grader_mode: GraderMode = "hardened",
         eval_every: int = 4,
         eval_tasks: int = 30,
@@ -214,7 +237,11 @@ if _modal is not None:
             steps=steps,
             tasks_per_step=tasks_per_step,
             group_size=group_size,
+            learning_rate=learning_rate,
             use_mis=use_mis,
+            mis_max_ratio=mis_max_ratio,
+            stale_steps=stale_steps,
+            micro_batch_size=micro_batch_size,
             grader_mode=grader_mode,
             eval_every=eval_every,
             eval_tasks=eval_tasks,
@@ -228,6 +255,20 @@ if _modal is not None:
         )
         weights_vol.commit()
         return summary
+
+    @app.local_entrypoint()
+    def bench_triton(
+        batch_size: int = 2,
+        seq_len: int = 2048,
+        vocab_size: int = 152_064,
+    ) -> None:
+        res = bench_triton_kernel_modal.remote(
+            batch_size=batch_size, seq_len=seq_len, vocab_size=vocab_size
+        )
+        out_local = Path("runs/triton_h100_bench.json")
+        out_local.parent.mkdir(parents=True, exist_ok=True)
+        out_local.write_text(json.dumps(res, indent=2), encoding="utf-8")
+        print(json.dumps(res, indent=2))
 
     @app.local_entrypoint()
     def baseline_eval(
@@ -254,9 +295,15 @@ if _modal is not None:
         steps: int = 12,
         tasks_per_step: int = 4,
         group_size: int = 8,
+        learning_rate: float = 2e-5,
         use_mis: bool = True,
+        mis_max_ratio: float = 2.0,
+        stale_steps: int = 0,
+        micro_batch_size: int = 2,
         grader_mode: GraderMode = "hardened",
         eval_every: int = 4,
+        eval_tasks: int = 30,
+        eval_samples: int = 4,
     ) -> None:
         summary = run_grpo_train_modal.remote(
             run_name=run_name,
@@ -264,9 +311,15 @@ if _modal is not None:
             steps=steps,
             tasks_per_step=tasks_per_step,
             group_size=group_size,
+            learning_rate=learning_rate,
             use_mis=use_mis,
+            mis_max_ratio=mis_max_ratio,
+            stale_steps=stale_steps,
+            micro_batch_size=micro_batch_size,
             grader_mode=grader_mode,
             eval_every=eval_every,
+            eval_tasks=eval_tasks,
+            eval_samples=eval_samples,
         )
         out_local = Path("runs") / f"{run_name}.json"
         out_local.parent.mkdir(parents=True, exist_ok=True)

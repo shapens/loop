@@ -51,6 +51,12 @@ warn_unused_ignores = true
 module = ["loop.modal_app"]
 disallow_untyped_decorators = false
 
+[[tool.mypy.overrides]]
+module = ["loop.trainer.triton_logprob"]
+disallow_untyped_decorators = false
+disallow_untyped_defs = false
+disallow_incomplete_defs = false
+
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 addopts = "-q"

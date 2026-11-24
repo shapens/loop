@@ -1,0 +1,30 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v5
+        with:
+          python-version: "3.11"
+      - name: Install dependencies (CPU)
+        run: |
+          uv venv
+          uv pip install --python .venv/bin/python -e ".[dev]"
+          uv pip install --python .venv/bin/python torch --index-url https://download.pytorch.org/whl/cpu
+      - name: Ruff lint & format check
+        run: |
+          .venv/bin/ruff check src tests
+          .venv/bin/ruff format --check src tests
+      - name: Mypy strict typecheck
+        run: .venv/bin/mypy src tests
+      - name: Pytest suite
+        run: .venv/bin/pytest -v
+      - name: Task suite anti-cheat self-check (5 families x 20)
+        run: .venv/bin/loop self-check --count 20

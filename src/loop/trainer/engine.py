@@ -12,6 +12,7 @@ import torch
 import torch.nn.functional as F
 
 from loop.trainer.grpo import compute_group_advantages, grpo_loss
+from loop.trainer.triton_logprob import fused_shifted_logprobs
 from loop.trainer.weight_sync import assert_weights_synced, state_dict_sha256
 from loop.types import GraderMode, StepTiming, TIMStats, Trajectory
 
@@ -35,6 +36,8 @@ class GRPOConfig:
     clip_eps: float = 0.2
     use_mis: bool = True
     mis_max_ratio: float = 2.0
+    stale_steps: int = 0
+    use_triton_logprobs: bool = True
     kl_coef: float = 0.01
     temperature: float = 0.8
     max_new_tokens: int = 1024
@@ -224,7 +227,11 @@ def grpo_train_step(
 
         out: Any = model(input_ids=batch.input_ids, attention_mask=batch.attention_mask)
         logits: torch.Tensor = out.logits if hasattr(out, "logits") else out
-        policy_lp = compute_shifted_logprobs(logits, batch.input_ids)
+        policy_lp = (
+            fused_shifted_logprobs(logits, batch.input_ids)
+            if cfg.use_triton_logprobs
+            else compute_shifted_logprobs(logits, batch.input_ids)
+        )
         rollout_lp = batch.rollout_logprobs[:, 1:]
 
         ref_lp: torch.Tensor | None = None

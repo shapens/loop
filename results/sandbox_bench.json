@@ -1,0 +1,101 @@
+[
+  {
+    "backend": "local_subprocess",
+    "concurrency": 1,
+    "total_gradings": 16,
+    "wall_ms": 868.4,
+    "throughput_per_sec": 18.42,
+    "p50_ms": 34.2,
+    "p95_ms": 170.6,
+    "p99_ms": 170.6,
+    "all_correct": true
+  },
+  {
+    "backend": "local_subprocess",
+    "concurrency": 8,
+    "total_gradings": 16,
+    "wall_ms": 233.6,
+    "throughput_per_sec": 68.51,
+    "p50_ms": 47.8,
+    "p95_ms": 175.8,
+    "p99_ms": 175.8,
+    "all_correct": true
+  },
+  {
+    "backend": "local_subprocess",
+    "concurrency": 16,
+    "total_gradings": 16,
+    "wall_ms": 218.0,
+    "throughput_per_sec": 73.4,
+    "p50_ms": 82.8,
+    "p95_ms": 214.0,
+    "p99_ms": 214.0,
+    "all_correct": true
+  },
+  {
+    "backend": "shapens_tri_http",
+    "concurrency": 1,
+    "total_gradings": 16,
+    "wall_ms": 2698.3,
+    "throughput_per_sec": 5.93,
+    "p50_ms": 148.0,
+    "p95_ms": 288.3,
+    "p99_ms": 288.3,
+    "all_correct": true
+  },
+  {
+    "backend": "shapens_tri_http",
+    "concurrency": 8,
+    "total_gradings": 16,
+    "wall_ms": 943.9,
+    "throughput_per_sec": 16.95,
+    "p50_ms": 406.2,
+    "p95_ms": 628.0,
+    "p99_ms": 628.0,
+    "all_correct": true
+  },
+  {
+    "backend": "shapens_tri_http",
+    "concurrency": 16,
+    "total_gradings": 16,
+    "wall_ms": 1006.6,
+    "throughput_per_sec": 15.89,
+    "p50_ms": 835.0,
+    "p95_ms": 1005.5,
+    "p99_ms": 1005.5,
+    "all_correct": true
+  },
+  {
+    "backend": "modal_sandbox_ephemeral",
+    "concurrency": 1,
+    "total_gradings": 8,
+    "wall_ms": 9506.7,
+    "throughput_per_sec": 0.84,
+    "p50_ms": 1031.6,
+    "p95_ms": 2361.4,
+    "p99_ms": 2361.4,
+    "all_correct": true
+  },
+  {
+    "backend": "modal_sandbox_ephemeral",
+    "concurrency": 4,
+    "total_gradings": 8,
+    "wall_ms": 2499.9,
+    "throughput_per_sec": 3.2,
+    "p50_ms": 1105.0,
+    "p95_ms": 1597.1,
+    "p99_ms": 1597.1,
+    "all_correct": true
+  },
+  {
+    "backend": "modal_sandbox_ephemeral",
+    "concurrency": 8,
+    "total_gradings": 8,
+    "wall_ms": 1068.9,
+    "throughput_per_sec": 7.48,
+    "p50_ms": 975.0,
+    "p95_ms": 1068.0,
+    "p99_ms": 1068.0,
+    "all_correct": true
+  }
+]

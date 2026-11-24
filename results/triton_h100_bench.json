@@ -1,0 +1,17 @@
+{
+  "gpu_name": "NVIDIA H100 80GB HBM3",
+  "shape": [
+    2,
+    2048,
+    152064
+  ],
+  "dtype": "bfloat16",
+  "fwd_max_abs_err": 9.5367431640625e-07,
+  "bwd_max_abs_err": 4.656612873077393e-10,
+  "pytorch_ms": 14.85,
+  "triton_ms": 5.57,
+  "speedup_x": 2.67,
+  "pytorch_peak_gb": 9.279,
+  "triton_peak_gb": 5.801,
+  "vram_saved_gb": 3.478
+}
