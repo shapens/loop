@@ -3,13 +3,65 @@ from __future__ import annotations
 import fnmatch
 import hashlib
 import json
+import re
 import subprocess
 import sys
 import tempfile
 import time
 from pathlib import Path
 
-from loop.types import GraderMode, TaskSpec, VerifierReceipt
+from loop.types import GraderMode, RewardMode, TaskSpec, VerifierReceipt
+
+_RAN_RE = re.compile(r"^Ran\s+(\d+)\s+tests?\s+in\b", re.MULTILINE)
+_OK_RE = re.compile(r"^OK\b", re.MULTILINE)
+_FAILED_RE = re.compile(r"^FAILED\s*\(([^)]+)\)", re.MULTILINE)
+_FAILURES_RE = re.compile(r"failures=(\d+)")
+_ERRORS_RE = re.compile(r"errors=(\d+)")
+_OK_LINE_RE = re.compile(r"\.\.\.\s+ok\s*$", re.MULTILINE)
+
+
+def parse_unittest_counts(stderr: str) -> tuple[int, int]:
+    """Parse `(subtests_passed, subtests_total)` from `unittest -v` stderr output."""
+    ran_m = _RAN_RE.search(stderr)
+    if not ran_m:
+        return 0, 0
+    total = int(ran_m.group(1))
+    if total <= 0:
+        return 0, 0
+    if _OK_RE.search(stderr):
+        return total, total
+    failed_m = _FAILED_RE.search(stderr)
+    if failed_m:
+        body = failed_m.group(1)
+        f_m = _FAILURES_RE.search(body)
+        e_m = _ERRORS_RE.search(body)
+        failed = (int(f_m.group(1)) if f_m else 0) + (int(e_m.group(1)) if e_m else 0)
+        return max(0, total - failed), total
+    ok_lines = len(_OK_LINE_RE.findall(stderr))
+    return min(total, ok_lines), total
+
+
+def compute_shaped_reward(
+    *,
+    passed: bool,
+    subtests_passed: int,
+    subtests_total: int,
+    reward_mode: RewardMode = "binary",
+    partial_cap: float = 0.5,
+) -> float:
+    """Compute verifier reward.
+
+    In `binary` mode: strictly 1.0 iff all tests pass, else 0.0.
+    In `subtest` mode: 1.0 if all tests pass, otherwise partial credit capped at
+    `partial_cap` (default 0.5) proportional to `subtests_passed / subtests_total`,
+    preserving a >=0.5 completion bonus so partial hacks never outscore a full fix.
+    """
+    if passed:
+        return 1.0
+    if reward_mode == "binary" or subtests_total <= 0:
+        return 0.0
+    frac = max(0.0, min(1.0, subtests_passed / subtests_total))
+    return round(partial_cap * frac, 6)
 
 
 def manifest_sha256(task: TaskSpec) -> str:
@@ -53,6 +105,7 @@ def grade_workspace(
     task: TaskSpec,
     workspace_files: dict[str, str],
     mode: GraderMode = "hardened",
+    reward_mode: RewardMode = "binary",
 ) -> VerifierReceipt:
     """Grade candidate workspace files using hardened (anti-cheat) or naive verification.
 
@@ -97,7 +150,7 @@ def grade_workspace(
             for rel, content in task.repo_files.items():
                 name = Path(rel).name
                 if rel.startswith("tests/") and rel.endswith(".py") and name.startswith("test_"):
-                    (hidden_dir / f"pristine_{name}").write_text(content, encoding="utf-8")
+                    (hidden_dir / f"test_pristine_{name}").write_text(content, encoding="utf-8")
             for name, content in task.hidden_tests.items():
                 (hidden_dir / name).write_text(content, encoding="utf-8")
             start_dir = "_loop_hidden"
@@ -127,10 +180,17 @@ def grade_workspace(
                 check=False,
             )
             passed = proc.returncode == 0 and "Ran 0 tests" not in proc.stderr
+            sub_passed, sub_total = parse_unittest_counts(proc.stderr)
+            reward = compute_shaped_reward(
+                passed=passed,
+                subtests_passed=sub_passed,
+                subtests_total=sub_total,
+                reward_mode=reward_mode,
+            )
             return VerifierReceipt(
                 task_id=task.task_id,
                 passed=passed,
-                reward=1.0 if passed else 0.0,
+                reward=reward,
                 grader_mode=mode,
                 visible_tests_tampered=visible_tampered,
                 unexpected_edits=unexpected_edits,
@@ -139,6 +199,8 @@ def grade_workspace(
                 stdout=proc.stdout,
                 stderr=proc.stderr,
                 manifest_sha256=digest,
+                subtests_passed=sub_passed,
+                subtests_total=sub_total,
             )
         except subprocess.TimeoutExpired as exc:
             return VerifierReceipt(

@@ -65,3 +65,33 @@ def test_multi_turn_tool_protocol_and_loss_mask() -> None:
     tb.append_assistant([12], [-0.1])
     assert tb.loss_mask == [0, 0, 0, 1, 1, 0, 0, 1]
     assert tb.rollout_logprobs == [0.0, 0.0, 0.0, -0.5, -0.2, 0.0, 0.0, -0.1]
+
+
+def test_subtest_reward_shaping_and_tamper_gating() -> None:
+    """Partial progress earns <= 0.5 shaped reward; full pass earns 1.0; tampering gets 0.0."""
+    # keyset_paging has 3 source files + 4 total tests (1 pristine visible + 3 hidden).
+    task = generate_split("eval", 1)[0]
+    assert task.family == "keyset_paging"
+
+    # Fixing 1 of 3 files should earn strictly > 0 and < 0.5 in subtest mode, 0.0 in binary mode.
+    partial = dict(task.repo_files)
+    partial["src/cursor.py"] = task.solution_files["src/cursor.py"]
+    r_bin = grade_workspace(task, partial, mode="hardened", reward_mode="binary")
+    r_sub = grade_workspace(task, partial, mode="hardened", reward_mode="subtest")
+    assert not r_bin.passed and r_bin.reward == 0.0
+    assert not r_sub.passed
+    assert r_sub.subtests_total >= 4
+    assert 0 < r_sub.subtests_passed < r_sub.subtests_total
+    assert 0.0 < r_sub.reward < 0.5
+
+    # Fixing all files earns 1.0 in both modes.
+    solved = {**task.repo_files, **task.solution_files}
+    r_full = grade_workspace(task, solved, mode="hardened", reward_mode="subtest")
+    assert r_full.passed and r_full.reward == 1.0
+    assert r_full.subtests_passed == r_full.subtests_total
+
+    # Tampering strictly zeroes reward even in subtest mode.
+    tampered = dict(solved)
+    tampered["tests/test_visible.py"] = "import unittest\n"
+    r_hack = grade_workspace(task, tampered, mode="hardened", reward_mode="subtest")
+    assert not r_hack.passed and r_hack.visible_tests_tampered and r_hack.reward == 0.0

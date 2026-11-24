@@ -84,7 +84,9 @@ def run_colocated_grpo(
         weight_decay=cfg.weight_decay,
     )
 
-    train_pool = generate_split("train", max(200, cfg.steps * cfg.tasks_per_step))
+    train_pool = generate_split(
+        "train", max(200, cfg.steps * cfg.tasks_per_step), families=cfg.train_families
+    )
     eval_pool = generate_split("eval", cfg.eval_tasks)
     sandbox = LocalSubprocessSandbox()
 
@@ -92,17 +94,21 @@ def run_colocated_grpo(
         return [int(x) for x in tokenizer.encode(text, add_special_tokens=False)]
 
     def make_generator(*, temperature: float, lora_req: Any | None) -> Any:
-        sampling = SamplingParams(
-            temperature=temperature,
-            max_tokens=cfg.max_new_tokens,
-            logprobs=1,
-            stop=list(STOP_STRINGS),
-            include_stop_str_in_output=True,
-        )
-
         def generate_batch(prompts: list[list[int]]) -> list[BatchedGeneration]:
             req_prompts = [TokensPrompt(prompt_token_ids=ids) for ids in prompts]
-            outputs = llm.generate(req_prompts, sampling, lora_request=lora_req, use_tqdm=False)
+            sampling_list = [
+                SamplingParams(
+                    temperature=temperature,
+                    max_tokens=max(1, min(cfg.max_new_tokens, cfg.max_seq_len - len(ids))),
+                    logprobs=1,
+                    stop=list(STOP_STRINGS),
+                    include_stop_str_in_output=True,
+                )
+                for ids in prompts
+            ]
+            outputs = llm.generate(
+                req_prompts, sampling_list, lora_request=lora_req, use_tqdm=False
+            )
             results: list[BatchedGeneration] = []
             for out in outputs:
                 seq = out.outputs[0]
@@ -129,6 +135,8 @@ def run_colocated_grpo(
             max_turns=cfg.max_turns,
             policy_version=step_idx,
             grader_mode="hardened",
+            reward_mode="binary",
+            max_context_tokens=max(64, cfg.max_seq_len - 32),
         )
         rep = summarize_eval(
             model=f"{cfg.model_name}@step{step_idx}",
@@ -165,6 +173,8 @@ def run_colocated_grpo(
             max_turns=cfg.max_turns,
             policy_version=rollout_policy_idx,
             grader_mode=cfg.grader_mode,
+            reward_mode=cfg.reward_mode,
+            max_context_tokens=max(64, cfg.max_seq_len - 32),
         )
         total_rollout_wall_ms = (time.perf_counter() - t_rollout_wall) * 1000.0
         gen_wall_ms = sum(tr.rollout_ms for tr in trajs)

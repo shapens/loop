@@ -1,0 +1,1014 @@
+{
+  "config": {
+    "model_name": "Qwen/Qwen2.5-Coder-3B-Instruct",
+    "lora_rank": 16,
+    "lora_alpha": 32,
+    "learning_rate": 0.00015,
+    "weight_decay": 0.01,
+    "max_grad_norm": 1.0,
+    "steps": 20,
+    "tasks_per_step": 5,
+    "group_size": 8,
+    "max_turns": 6,
+    "max_seq_len": 4096,
+    "micro_batch_size": 2,
+    "clip_eps": 0.2,
+    "use_mis": true,
+    "mis_max_ratio": 1.5,
+    "stale_steps": 8,
+    "use_triton_logprobs": true,
+    "kl_coef": 0.0,
+    "temperature": 0.8,
+    "max_new_tokens": 1024,
+    "grader_mode": "hardened",
+    "reward_mode": "subtest",
+    "eval_every": 5,
+    "eval_tasks": 50,
+    "eval_samples": 4
+  },
+  "wall_seconds": 906.4762507319999,
+  "steps": [
+    {
+      "step": 1,
+      "mean_reward": 0.2045833319425583,
+      "pass_rate": 0.05,
+      "tamper_rate": 0.0,
+      "loss": 0.13472125679254532,
+      "grad_norm": 0.047944966703653336,
+      "tim": {
+        "mean_abs_logprob_diff": 0.003422182253196337,
+        "p99_abs_logprob_diff": 0.11013611406087875,
+        "max_abs_logprob_diff": 0.21718060970306396,
+        "high_ratio_fraction": 0.0,
+        "masked_token_fraction": 0.0,
+        "effective_sample_size": 660.3140998840332,
+        "active_tokens": 13209
+      },
+      "timing": {
+        "rollout_ms": 8401.466029999996,
+        "sandbox_ms": 1160.4071670000158,
+        "learner_ms": 9392.663180999989,
+        "weight_sync_ms": 912.8728719999799,
+        "extra": {}
+      },
+      "adapter_sha256": "7900ddb1317230223e79680ae8973eaea4c16ea27ae3d6ffc3a7b85c7bd34308",
+      "rollout_policy_version": 0,
+      "timing_fractions": {
+        "rollout": 0.42287677896402137,
+        "sandbox": 0.058407573549128795,
+        "learner": 0.47276738817870767,
+        "weight_sync": 0.045948259308142086
+      }
+    },
+    {
+      "step": 2,
+      "mean_reward": 0.18437500298023224,
+      "pass_rate": 0.075,
+      "tamper_rate": 0.025,
+      "loss": 0.08540736436843872,
+      "grad_norm": 0.043466076254844666,
+      "tim": {
+        "mean_abs_logprob_diff": 0.007800196543714663,
+        "p99_abs_logprob_diff": 0.5851798057556152,
+        "max_abs_logprob_diff": 1.346755027770996,
+        "high_ratio_fraction": 0.0009574531837304158,
+        "masked_token_fraction": 0.001675543055472459,
+        "effective_sample_size": 832.9656089782715,
+        "active_tokens": 16711
+      },
+      "timing": {
+        "rollout_ms": 11385.600552999987,
+        "sandbox_ms": 1225.467600999993,
+        "learner_ms": 10183.488691999997,
+        "weight_sync_ms": 923.997581000009,
+        "extra": {}
+      },
+      "adapter_sha256": "9dd6e36a748a6f7897a18d4ab2d3e4e6551109c09f98f55ba7b7ddf1a8bd162b",
+      "rollout_policy_version": 0,
+      "timing_fractions": {
+        "rollout": 0.4800292778399346,
+        "sandbox": 0.05166704424469408,
+        "learner": 0.42934693694518056,
+        "weight_sync": 0.03895674097019072
+      }
+    },
+    {
+      "step": 3,
+      "mean_reward": 0.13750003278255463,
+      "pass_rate": 0.0,
+      "tamper_rate": 0.025,
+      "loss": 0.07473950758576393,
+      "grad_norm": 0.037778131663799286,
+      "tim": {
+        "mean_abs_logprob_diff": 0.012993228084888496,
+        "p99_abs_logprob_diff": 1.4352045059204102,
+        "max_abs_logprob_diff": 1.9519115686416626,
+        "high_ratio_fraction": 0.0011549566978786498,
+        "masked_token_fraction": 0.002117420596727616,
+        "effective_sample_size": 774.2997665405273,
+        "active_tokens": 15585
+      },
+      "timing": {
+        "rollout_ms": 7418.086627999991,
+        "sandbox_ms": 1451.2638949999882,
+        "learner_ms": 8734.271180999996,
+        "weight_sync_ms": 1075.3666390000092,
+        "extra": {}
+      },
+      "adapter_sha256": "83a894c97e1c109d4ea71f1d4e7b5c0384d1698aa2c7c8d9714d9f9f22adc164",
+      "rollout_policy_version": 0,
+      "timing_fractions": {
+        "rollout": 0.39713535293146346,
+        "sandbox": 0.07769499441568281,
+        "learner": 0.46759872754421383,
+        "weight_sync": 0.05757092510863986
+      }
+    },
+    {
+      "step": 4,
+      "mean_reward": 0.18875005841255188,
+      "pass_rate": 0.05,
+      "tamper_rate": 0.0,
+      "loss": -0.015594777092337609,
+      "grad_norm": 0.04111268371343613,
+      "tim": {
+        "mean_abs_logprob_diff": 0.016980380306160416,
+        "p99_abs_logprob_diff": 1.1777408123016357,
+        "max_abs_logprob_diff": 1.7924211025238037,
+        "high_ratio_fraction": 0.0012934519129236084,
+        "masked_token_fraction": 0.002667744543249791,
+        "effective_sample_size": 614.5067512512207,
+        "active_tokens": 12370
+      },
+      "timing": {
+        "rollout_ms": 6634.201366999974,
+        "sandbox_ms": 30578.122629000034,
+        "learner_ms": 7335.874305000005,
+        "weight_sync_ms": 876.1777609999797,
+        "extra": {}
+      },
+      "adapter_sha256": "ad01c7bd18fb5e7d8eea5c2e44dab9b3ce51df840f3844810af0061114139207",
+      "rollout_policy_version": 0,
+      "timing_fractions": {
+        "rollout": 0.1460493669290012,
+        "sandbox": 0.6731654957079384,
+        "learner": 0.16149642418835272,
+        "weight_sync": 0.019288713174707775
+      }
+    },
+    {
+      "step": 5,
+      "mean_reward": 0.1900000423192978,
+      "pass_rate": 0.05,
+      "tamper_rate": 0.0,
+      "loss": 0.09077709093689919,
+      "grad_norm": 0.027538103982806206,
+      "tim": {
+        "mean_abs_logprob_diff": 0.0186372175233099,
+        "p99_abs_logprob_diff": 1.4793131351470947,
+        "max_abs_logprob_diff": 2.3377115726470947,
+        "high_ratio_fraction": 0.0013493000538483278,
+        "masked_token_fraction": 0.003794906392308998,
+        "effective_sample_size": 588.0311508178711,
+        "active_tokens": 11858
+      },
+      "timing": {
+        "rollout_ms": 6265.189995999974,
+        "sandbox_ms": 1198.9089440000398,
+        "learner_ms": 7547.276541000002,
+        "weight_sync_ms": 914.9727600000119,
+        "extra": {}
+      },
+      "adapter_sha256": "4dbd3c4830fbf9b002cd807b495008f3c53a176fd190d2d26a523bd275c61447",
+      "rollout_policy_version": 0,
+      "timing_fractions": {
+        "rollout": 0.39338521933553916,
+        "sandbox": 0.07527833285182263,
+        "learner": 0.47388619329386855,
+        "weight_sync": 0.057450254518769714
+      }
+    },
+    {
+      "step": 6,
+      "mean_reward": 0.29229167103767395,
+      "pass_rate": 0.15,
+      "tamper_rate": 0.0,
+      "loss": -0.08944906741380691,
+      "grad_norm": 0.03302247077226639,
+      "tim": {
+        "mean_abs_logprob_diff": 0.021965227852709494,
+        "p99_abs_logprob_diff": 1.6366565227508545,
+        "max_abs_logprob_diff": 3.9785022735595703,
+        "high_ratio_fraction": 0.0018954351424167715,
+        "masked_token_fraction": 0.003395987995577309,
+        "effective_sample_size": 626.691877746582,
+        "active_tokens": 12662
+      },
+      "timing": {
+        "rollout_ms": 6598.050337000017,
+        "sandbox_ms": 1138.2702669999962,
+        "learner_ms": 7198.142942000004,
+        "weight_sync_ms": 889.3830110000067,
+        "extra": {}
+      },
+      "adapter_sha256": "a3cc631c6b77e1c8e2c5d8a5b1981bbb238f52c047d404f6dabe1086170170fe",
+      "rollout_policy_version": 0,
+      "timing_fractions": {
+        "rollout": 0.41696880169008116,
+        "sandbox": 0.07193385393998639,
+        "learner": 0.45489210958101384,
+        "weight_sync": 0.05620523478891855
+      }
+    },
+    {
+      "step": 7,
+      "mean_reward": 0.17166668176651,
+      "pass_rate": 0.025,
+      "tamper_rate": 0.0,
+      "loss": 0.19821263290941715,
+      "grad_norm": 0.04243505373597145,
+      "tim": {
+        "mean_abs_logprob_diff": 0.022232764551658915,
+        "p99_abs_logprob_diff": 1.5894410610198975,
+        "max_abs_logprob_diff": 3.921243190765381,
+        "high_ratio_fraction": 0.0016217969451547095,
+        "masked_token_fraction": 0.0036490431397988993,
+        "effective_sample_size": 611.1263286590577,
+        "active_tokens": 12332
+      },
+      "timing": {
+        "rollout_ms": 7251.851279999983,
+        "sandbox_ms": 1162.229285000023,
+        "learner_ms": 7839.710324000009,
+        "weight_sync_ms": 913.9398899999946,
+        "extra": {}
+      },
+      "adapter_sha256": "edc84a589e38fc915676063df1ab49cf0dbd32ba4c55db2d41508e1f91cccc0c",
+      "rollout_policy_version": 0,
+      "timing_fractions": {
+        "rollout": 0.42241175455003205,
+        "sandbox": 0.06769848036187115,
+        "learner": 0.4566538481363964,
+        "weight_sync": 0.053235916951700366
+      }
+    },
+    {
+      "step": 8,
+      "mean_reward": 0.18541665375232697,
+      "pass_rate": 0.05,
+      "tamper_rate": 0.0,
+      "loss": 0.07686236798763275,
+      "grad_norm": 0.04467322677373886,
+      "tim": {
+        "mean_abs_logprob_diff": 0.020142817966130974,
+        "p99_abs_logprob_diff": 1.22370183467865,
+        "max_abs_logprob_diff": 4.169341564178467,
+        "high_ratio_fraction": 0.0011236796789485589,
+        "masked_token_fraction": 0.0029215671585886603,
+        "effective_sample_size": 662.5206310272217,
+        "active_tokens": 13349
+      },
+      "timing": {
+        "rollout_ms": 8499.670653000008,
+        "sandbox_ms": 1647.195834000002,
+        "learner_ms": 8535.790012000007,
+        "weight_sync_ms": 892.3866320000116,
+        "extra": {}
+      },
+      "adapter_sha256": "1defb3124356ca888b897c6f2aa85ae0b733d0b66205790247b0cf0b08c1cb03",
+      "rollout_policy_version": 0,
+      "timing_fractions": {
+        "rollout": 0.43420954917537313,
+        "sandbox": 0.08414774991690409,
+        "learner": 0.4360547230918892,
+        "weight_sync": 0.04558797781583341
+      }
+    },
+    {
+      "step": 9,
+      "mean_reward": 0.22437499463558197,
+      "pass_rate": 0.05,
+      "tamper_rate": 0.0,
+      "loss": 0.20132737904787062,
+      "grad_norm": 0.07584117352962494,
+      "tim": {
+        "mean_abs_logprob_diff": 0.017804609078363964,
+        "p99_abs_logprob_diff": 0.8472111225128174,
+        "max_abs_logprob_diff": 2.834603786468506,
+        "high_ratio_fraction": 0.0013993353301318594,
+        "masked_token_fraction": 0.00349833828931257,
+        "effective_sample_size": 568.1456050872803,
+        "active_tokens": 11434
+      },
+      "timing": {
+        "rollout_ms": 6791.604537000012,
+        "sandbox_ms": 20684.584974999947,
+        "learner_ms": 7062.354298999991,
+        "weight_sync_ms": 882.7808469999923,
+        "extra": {}
+      },
+      "adapter_sha256": "a7a1e3510f9691ce4e314dc3319e7018cd5b7a15b1dc16352b44847f3ee76af7",
+      "rollout_policy_version": 0,
+      "timing_fractions": {
+        "rollout": 0.19173773433304167,
+        "sandbox": 0.5839585383865171,
+        "learner": 0.1993814281986473,
+        "weight_sync": 0.024922299081793803
+      }
+    },
+    {
+      "step": 10,
+      "mean_reward": 0.32895833253860474,
+      "pass_rate": 0.225,
+      "tamper_rate": 0.025,
+      "loss": 0.19621023535728455,
+      "grad_norm": 0.037608690559864044,
+      "tim": {
+        "mean_abs_logprob_diff": 0.012600717938549812,
+        "p99_abs_logprob_diff": 0.9998442530632019,
+        "max_abs_logprob_diff": 2.9804296493530273,
+        "high_ratio_fraction": 0.00042614392572503913,
+        "masked_token_fraction": 0.0011718958078090797,
+        "effective_sample_size": 934.5108764648437,
+        "active_tokens": 18773
+      },
+      "timing": {
+        "rollout_ms": 14504.97337399997,
+        "sandbox_ms": 1271.2034600000425,
+        "learner_ms": 10113.98269700004,
+        "weight_sync_ms": 886.3028739999663,
+        "extra": {}
+      },
+      "adapter_sha256": "ed97793efe6b3af0a2489772ec8351c21f1642399f34f3d9774ad566dc0f4740",
+      "rollout_policy_version": 1,
+      "timing_fractions": {
+        "rollout": 0.541706113175407,
+        "sandbox": 0.047474660422755034,
+        "learner": 0.3777191528897199,
+        "weight_sync": 0.033100073512118064
+      }
+    },
+    {
+      "step": 11,
+      "mean_reward": 0.2991666793823242,
+      "pass_rate": 0.15,
+      "tamper_rate": 0.0,
+      "loss": 0.03359820824116468,
+      "grad_norm": 0.03891129046678543,
+      "tim": {
+        "mean_abs_logprob_diff": 0.013020480097014788,
+        "p99_abs_logprob_diff": 0.6701500415802002,
+        "max_abs_logprob_diff": 2.093797206878662,
+        "high_ratio_fraction": 0.0007890583926862398,
+        "masked_token_fraction": 0.0017096265123619206,
+        "effective_sample_size": 754.7696197509765,
+        "active_tokens": 15208
+      },
+      "timing": {
+        "rollout_ms": 10323.443179000042,
+        "sandbox_ms": 20606.86201800001,
+        "learner_ms": 7928.433595000001,
+        "weight_sync_ms": 889.7200070000508,
+        "extra": {}
+      },
+      "adapter_sha256": "e3bd6737d422cc2e7c59be46cc3ef36bb25136ebf9fa9bd895e7918a02d85b88",
+      "rollout_policy_version": 2,
+      "timing_fractions": {
+        "rollout": 0.25971933229420546,
+        "sandbox": 0.5184317239117304,
+        "learner": 0.1994651826651313,
+        "weight_sync": 0.022383761128932936
+      }
+    },
+    {
+      "step": 12,
+      "mean_reward": 0.32249999046325684,
+      "pass_rate": 0.2,
+      "tamper_rate": 0.025,
+      "loss": 0.22029249798506498,
+      "grad_norm": 0.03819575905799866,
+      "tim": {
+        "mean_abs_logprob_diff": 0.011908239678846697,
+        "p99_abs_logprob_diff": 0.8312311172485352,
+        "max_abs_logprob_diff": 1.7616515159606934,
+        "high_ratio_fraction": 0.0004996114102431801,
+        "masked_token_fraction": 0.0014988342400355202,
+        "effective_sample_size": 896.0171031951904,
+        "active_tokens": 18014
+      },
+      "timing": {
+        "rollout_ms": 10299.04814500014,
+        "sandbox_ms": 20762.327725999858,
+        "learner_ms": 9086.490508999987,
+        "weight_sync_ms": 955.0628970000616,
+        "extra": {}
+      },
+      "adapter_sha256": "5f5d8887a5ed91596f3cc78f79b995a92e2f4ed96b99b0f579fb153756f6adc0",
+      "rollout_policy_version": 3,
+      "timing_fractions": {
+        "rollout": 0.2505672546010772,
+        "sandbox": 0.5051301231130947,
+        "learner": 0.22106673827951506,
+        "weight_sync": 0.023235884006313046
+      }
+    },
+    {
+      "step": 13,
+      "mean_reward": 0.31583333015441895,
+      "pass_rate": 0.175,
+      "tamper_rate": 0.025,
+      "loss": 0.11811466626822949,
+      "grad_norm": 0.03080044686794281,
+      "tim": {
+        "mean_abs_logprob_diff": 0.013834680631251864,
+        "p99_abs_logprob_diff": 0.6701928973197937,
+        "max_abs_logprob_diff": 1.6297041177749634,
+        "high_ratio_fraction": 0.0006263309602390475,
+        "masked_token_fraction": 0.0018163597644995741,
+        "effective_sample_size": 794.3761478424072,
+        "active_tokens": 15966
+      },
+      "timing": {
+        "rollout_ms": 11158.058278999984,
+        "sandbox_ms": 40519.71756800004,
+        "learner_ms": 8392.183476000013,
+        "weight_sync_ms": 892.9522490000181,
+        "extra": {}
+      },
+      "adapter_sha256": "e8f1250e91da0e3f2f1292ab5c485a044d1fd9e7a7a7b89f5b8f13bbed10a4f5",
+      "rollout_policy_version": 4,
+      "timing_fractions": {
+        "rollout": 0.18303027186983672,
+        "sandbox": 0.664661784077428,
+        "learner": 0.13766047683087532,
+        "weight_sync": 0.014647467221859964
+      }
+    },
+    {
+      "step": 14,
+      "mean_reward": 0.2854166328907013,
+      "pass_rate": 0.15,
+      "tamper_rate": 0.0,
+      "loss": 0.08753730151802301,
+      "grad_norm": 0.030988847836852074,
+      "tim": {
+        "mean_abs_logprob_diff": 0.014867152080101873,
+        "p99_abs_logprob_diff": 0.7419961094856262,
+        "max_abs_logprob_diff": 1.9601218700408936,
+        "high_ratio_fraction": 0.00037625104147518,
+        "masked_token_fraction": 0.0015050041387613755,
+        "effective_sample_size": 661.3996202468873,
+        "active_tokens": 13289
+      },
+      "timing": {
+        "rollout_ms": 11695.626654000076,
+        "sandbox_ms": 30510.772915999954,
+        "learner_ms": 8260.536007999917,
+        "weight_sync_ms": 876.4371549999623,
+        "extra": {}
+      },
+      "adapter_sha256": "c46db546609ef303f4ffb1bd26935b54ea92b2bf278dfcd88fc294e5b0bd5747",
+      "rollout_policy_version": 5,
+      "timing_fractions": {
+        "rollout": 0.22779233290381312,
+        "sandbox": 0.5942494871668175,
+        "learner": 0.16088806730631128,
+        "weight_sync": 0.01707011262305817
+      }
+    },
+    {
+      "step": 15,
+      "mean_reward": 0.3685416579246521,
+      "pass_rate": 0.25,
+      "tamper_rate": 0.025,
+      "loss": 0.18011532882228493,
+      "grad_norm": 0.026160892099142075,
+      "tim": {
+        "mean_abs_logprob_diff": 0.014688296398943602,
+        "p99_abs_logprob_diff": 0.5311367511749268,
+        "max_abs_logprob_diff": 2.5141801834106445,
+        "high_ratio_fraction": 0.0004606408089439283,
+        "masked_token_fraction": 0.0018425632101545825,
+        "effective_sample_size": 970.7637199401855,
+        "active_tokens": 19538
+      },
+      "timing": {
+        "rollout_ms": 19469.89345100007,
+        "sandbox_ms": 1323.7549299998427,
+        "learner_ms": 10669.834403999972,
+        "weight_sync_ms": 885.2155120000589,
+        "extra": {}
+      },
+      "adapter_sha256": "141d095d6a3aeab0bc511a73bbde1e0496d66fbd62f66f9ffbb0962b678c30eb",
+      "rollout_policy_version": 6,
+      "timing_fractions": {
+        "rollout": 0.6018756387735616,
+        "sandbox": 0.040921428053956946,
+        "learner": 0.32983813772158815,
+        "weight_sync": 0.027364795450893143
+      }
+    },
+    {
+      "step": 16,
+      "mean_reward": 0.32062503695487976,
+      "pass_rate": 0.15,
+      "tamper_rate": 0.0,
+      "loss": 0.12893903627991676,
+      "grad_norm": 0.03342116251587868,
+      "tim": {
+        "mean_abs_logprob_diff": 0.01878998495586461,
+        "p99_abs_logprob_diff": 1.1706992387771606,
+        "max_abs_logprob_diff": 1.9899741411209106,
+        "high_ratio_fraction": 0.0005611147548792415,
+        "masked_token_fraction": 0.0025250163658467988,
+        "effective_sample_size": 530.3600769042969,
+        "active_tokens": 10693
+      },
+      "timing": {
+        "rollout_ms": 7940.456506999914,
+        "sandbox_ms": 20669.569074000145,
+        "learner_ms": 6829.5105260000355,
+        "weight_sync_ms": 875.8115299999645,
+        "extra": {}
+      },
+      "adapter_sha256": "b15d575d2d40381e179822ce9344fb7f707eb4ad9f6ddddda60697da6f57caab",
+      "rollout_policy_version": 7,
+      "timing_fractions": {
+        "rollout": 0.21865291188648142,
+        "sandbox": 0.5691689717694141,
+        "learner": 0.18806127354930668,
+        "weight_sync": 0.024116842794797866
+      }
+    },
+    {
+      "step": 17,
+      "mean_reward": 0.3545833230018616,
+      "pass_rate": 0.2,
+      "tamper_rate": 0.0,
+      "loss": -0.010177868604660033,
+      "grad_norm": 0.03609152510762215,
+      "tim": {
+        "mean_abs_logprob_diff": 0.019186042977118314,
+        "p99_abs_logprob_diff": 1.4660217761993408,
+        "max_abs_logprob_diff": 4.45469331741333,
+        "high_ratio_fraction": 0.0008888170637355746,
+        "masked_token_fraction": 0.0033128636069812557,
+        "effective_sample_size": 614.2875011444091,
+        "active_tokens": 12376
+      },
+      "timing": {
+        "rollout_ms": 10667.622945000177,
+        "sandbox_ms": 1140.006907999803,
+        "learner_ms": 7122.905087000049,
+        "weight_sync_ms": 916.7548990000114,
+        "extra": {}
+      },
+      "adapter_sha256": "65634cd7c238f14d097dbd2cd455ba51a163030ded5a848aaca89802130b5463",
+      "rollout_policy_version": 8,
+      "timing_fractions": {
+        "rollout": 0.5374851192044485,
+        "sandbox": 0.05743892074169656,
+        "learner": 0.35888552768567417,
+        "weight_sync": 0.0461904323681807
+      }
+    },
+    {
+      "step": 18,
+      "mean_reward": 0.3166666030883789,
+      "pass_rate": 0.125,
+      "tamper_rate": 0.025,
+      "loss": 0.11128868162631989,
+      "grad_norm": 0.07203551381826401,
+      "tim": {
+        "mean_abs_logprob_diff": 0.019615575950408155,
+        "p99_abs_logprob_diff": 2.000077486038208,
+        "max_abs_logprob_diff": 2.819492816925049,
+        "high_ratio_fraction": 0.0003964321092241864,
+        "masked_token_fraction": 0.004063429137760167,
+        "effective_sample_size": 501.05701222419736,
+        "active_tokens": 10090
+      },
+      "timing": {
+        "rollout_ms": 7992.448610999983,
+        "sandbox_ms": 10820.233839000028,
+        "learner_ms": 6775.165145999949,
+        "weight_sync_ms": 881.4670519999481,
+        "extra": {}
+      },
+      "adapter_sha256": "7df6594a97aa2d98fdf39e40a83cb12267a3979e639ec581988963804ca07015",
+      "rollout_policy_version": 9,
+      "timing_fractions": {
+        "rollout": 0.30195147540791784,
+        "sandbox": 0.40878405742241736,
+        "learner": 0.25596299851730003,
+        "weight_sync": 0.03330146865236475
+      }
+    },
+    {
+      "step": 19,
+      "mean_reward": 0.28833329677581787,
+      "pass_rate": 0.15,
+      "tamper_rate": 0.025,
+      "loss": 0.11546840302397925,
+      "grad_norm": 0.041917864233255386,
+      "tim": {
+        "mean_abs_logprob_diff": 0.01588782500989041,
+        "p99_abs_logprob_diff": 1.9343583583831787,
+        "max_abs_logprob_diff": 3.0538368225097656,
+        "high_ratio_fraction": 0.00043924670126188907,
+        "masked_token_fraction": 0.0019766101136550946,
+        "effective_sample_size": 905.4597648620605,
+        "active_tokens": 18213
+      },
+      "timing": {
+        "rollout_ms": 17854.647940999934,
+        "sandbox_ms": 11100.889636000153,
+        "learner_ms": 9388.123792999977,
+        "weight_sync_ms": 891.1493739999514,
+        "extra": {}
+      },
+      "adapter_sha256": "4f959989fe0ee51fb1d81918cf53a38c99f48e451749297c0188559e4f4d9d7b",
+      "rollout_policy_version": 10,
+      "timing_fractions": {
+        "rollout": 0.4550715959227702,
+        "sandbox": 0.2829347058261969,
+        "learner": 0.23928046586628834,
+        "weight_sync": 0.02271323238474473
+      }
+    },
+    {
+      "step": 20,
+      "mean_reward": 0.289166659116745,
+      "pass_rate": 0.125,
+      "tamper_rate": 0.0,
+      "loss": 0.1597730316221714,
+      "grad_norm": 0.04650897532701492,
+      "tim": {
+        "mean_abs_logprob_diff": 0.016551109482473278,
+        "p99_abs_logprob_diff": 1.0869734287261963,
+        "max_abs_logprob_diff": 2.9089574813842773,
+        "high_ratio_fraction": 0.0004939491221118051,
+        "masked_token_fraction": 0.001852309212151137,
+        "effective_sample_size": 805.7533920288085,
+        "active_tokens": 16196
+      },
+      "timing": {
+        "rollout_ms": 13163.566654999959,
+        "sandbox_ms": 20721.622430000018,
+        "learner_ms": 8795.902956999953,
+        "weight_sync_ms": 910.6896839999763,
+        "extra": {}
+      },
+      "adapter_sha256": "4bfd5852142eb67814aa08dae44cceaca4e803ff78d9dbdb6c5620585402d9b1",
+      "rollout_policy_version": 11,
+      "timing_fractions": {
+        "rollout": 0.30197358616219794,
+        "sandbox": 0.47535617057929985,
+        "learner": 0.20177892732826105,
+        "weight_sync": 0.020891315930241135
+      }
+    }
+  ],
+  "evals": [
+    {
+      "step": 0,
+      "report": {
+        "model": "Qwen/Qwen2.5-Coder-3B-Instruct@step0",
+        "split": "eval",
+        "grader_mode": "hardened",
+        "samples_per_task": 4,
+        "pass_at_k": {
+          "1": {
+            "k": 1,
+            "mean": 0.075,
+            "ci_low": 0.03,
+            "ci_high": 0.125,
+            "num_tasks": 50
+          },
+          "4": {
+            "k": 4,
+            "mean": 0.2,
+            "ci_low": 0.1,
+            "ci_high": 0.32,
+            "num_tasks": 50
+          }
+        },
+        "tamper_count": 0,
+        "total_episodes": 200,
+        "timeout_count": 1,
+        "mean_turns": 2.65,
+        "mean_rollout_ms": 74.90810245,
+        "mean_sandbox_ms": 432.42388214499994,
+        "by_family": [
+          {
+            "family": "async_keyed_queue",
+            "num_tasks": 10,
+            "pass_at_1": 0.05,
+            "tamper_rate": 0.0,
+            "mean_turns": 2.825
+          },
+          {
+            "family": "keyset_paging",
+            "num_tasks": 10,
+            "pass_at_1": 0.025,
+            "tamper_rate": 0.0,
+            "mean_turns": 2.925
+          },
+          {
+            "family": "ledger_invariants",
+            "num_tasks": 10,
+            "pass_at_1": 0.0,
+            "tamper_rate": 0.0,
+            "mean_turns": 2.825
+          },
+          {
+            "family": "rate_limiter_window",
+            "num_tasks": 10,
+            "pass_at_1": 0.3,
+            "tamper_rate": 0.0,
+            "mean_turns": 2.25
+          },
+          {
+            "family": "spec_invoice_calc",
+            "num_tasks": 10,
+            "pass_at_1": 0.0,
+            "tamper_rate": 0.0,
+            "mean_turns": 2.425
+          }
+        ]
+      }
+    },
+    {
+      "step": 5,
+      "report": {
+        "model": "Qwen/Qwen2.5-Coder-3B-Instruct@step5",
+        "split": "eval",
+        "grader_mode": "hardened",
+        "samples_per_task": 4,
+        "pass_at_k": {
+          "1": {
+            "k": 1,
+            "mean": 0.18,
+            "ci_low": 0.085,
+            "ci_high": 0.28,
+            "num_tasks": 50
+          },
+          "4": {
+            "k": 4,
+            "mean": 0.24,
+            "ci_low": 0.12,
+            "ci_high": 0.36,
+            "num_tasks": 50
+          }
+        },
+        "tamper_count": 2,
+        "total_episodes": 200,
+        "timeout_count": 3,
+        "mean_turns": 3.19,
+        "mean_rollout_ms": 68.57224162000007,
+        "mean_sandbox_ms": 571.2578390049978,
+        "by_family": [
+          {
+            "family": "async_keyed_queue",
+            "num_tasks": 10,
+            "pass_at_1": 0.05,
+            "tamper_rate": 0.025,
+            "mean_turns": 3.325
+          },
+          {
+            "family": "keyset_paging",
+            "num_tasks": 10,
+            "pass_at_1": 0.0,
+            "tamper_rate": 0.0,
+            "mean_turns": 3.125
+          },
+          {
+            "family": "ledger_invariants",
+            "num_tasks": 10,
+            "pass_at_1": 0.0,
+            "tamper_rate": 0.0,
+            "mean_turns": 3.05
+          },
+          {
+            "family": "rate_limiter_window",
+            "num_tasks": 10,
+            "pass_at_1": 0.85,
+            "tamper_rate": 0.0,
+            "mean_turns": 2.95
+          },
+          {
+            "family": "spec_invoice_calc",
+            "num_tasks": 10,
+            "pass_at_1": 0.0,
+            "tamper_rate": 0.025,
+            "mean_turns": 3.5
+          }
+        ]
+      }
+    },
+    {
+      "step": 10,
+      "report": {
+        "model": "Qwen/Qwen2.5-Coder-3B-Instruct@step10",
+        "split": "eval",
+        "grader_mode": "hardened",
+        "samples_per_task": 4,
+        "pass_at_k": {
+          "1": {
+            "k": 1,
+            "mean": 0.17,
+            "ci_low": 0.085,
+            "ci_high": 0.26,
+            "num_tasks": 50
+          },
+          "4": {
+            "k": 4,
+            "mean": 0.28,
+            "ci_low": 0.16,
+            "ci_high": 0.4,
+            "num_tasks": 50
+          }
+        },
+        "tamper_count": 6,
+        "total_episodes": 200,
+        "timeout_count": 3,
+        "mean_turns": 3.18,
+        "mean_rollout_ms": 106.70531502500079,
+        "mean_sandbox_ms": 624.4535035199982,
+        "by_family": [
+          {
+            "family": "async_keyed_queue",
+            "num_tasks": 10,
+            "pass_at_1": 0.1,
+            "tamper_rate": 0.075,
+            "mean_turns": 4.025
+          },
+          {
+            "family": "keyset_paging",
+            "num_tasks": 10,
+            "pass_at_1": 0.0,
+            "tamper_rate": 0.0,
+            "mean_turns": 3.025
+          },
+          {
+            "family": "ledger_invariants",
+            "num_tasks": 10,
+            "pass_at_1": 0.0,
+            "tamper_rate": 0.0,
+            "mean_turns": 2.55
+          },
+          {
+            "family": "rate_limiter_window",
+            "num_tasks": 10,
+            "pass_at_1": 0.75,
+            "tamper_rate": 0.025,
+            "mean_turns": 2.85
+          },
+          {
+            "family": "spec_invoice_calc",
+            "num_tasks": 10,
+            "pass_at_1": 0.0,
+            "tamper_rate": 0.05,
+            "mean_turns": 3.45
+          }
+        ]
+      }
+    },
+    {
+      "step": 15,
+      "report": {
+        "model": "Qwen/Qwen2.5-Coder-3B-Instruct@step15",
+        "split": "eval",
+        "grader_mode": "hardened",
+        "samples_per_task": 4,
+        "pass_at_k": {
+          "1": {
+            "k": 1,
+            "mean": 0.2,
+            "ci_low": 0.105,
+            "ci_high": 0.305,
+            "num_tasks": 50
+          },
+          "4": {
+            "k": 4,
+            "mean": 0.28,
+            "ci_low": 0.16,
+            "ci_high": 0.4,
+            "num_tasks": 50
+          }
+        },
+        "tamper_count": 0,
+        "total_episodes": 200,
+        "timeout_count": 3,
+        "mean_turns": 3.215,
+        "mean_rollout_ms": 99.29708080000002,
+        "mean_sandbox_ms": 726.731363504993,
+        "by_family": [
+          {
+            "family": "async_keyed_queue",
+            "num_tasks": 10,
+            "pass_at_1": 0.1,
+            "tamper_rate": 0.0,
+            "mean_turns": 3.6
+          },
+          {
+            "family": "keyset_paging",
+            "num_tasks": 10,
+            "pass_at_1": 0.0,
+            "tamper_rate": 0.0,
+            "mean_turns": 2.975
+          },
+          {
+            "family": "ledger_invariants",
+            "num_tasks": 10,
+            "pass_at_1": 0.0,
+            "tamper_rate": 0.0,
+            "mean_turns": 3.075
+          },
+          {
+            "family": "rate_limiter_window",
+            "num_tasks": 10,
+            "pass_at_1": 0.9,
+            "tamper_rate": 0.0,
+            "mean_turns": 3.05
+          },
+          {
+            "family": "spec_invoice_calc",
+            "num_tasks": 10,
+            "pass_at_1": 0.0,
+            "tamper_rate": 0.0,
+            "mean_turns": 3.375
+          }
+        ]
+      }
+    },
+    {
+      "step": 20,
+      "report": {
+        "model": "Qwen/Qwen2.5-Coder-3B-Instruct@step20",
+        "split": "eval",
+        "grader_mode": "hardened",
+        "samples_per_task": 4,
+        "pass_at_k": {
+          "1": {
+            "k": 1,
+            "mean": 0.175,
+            "ci_low": 0.085,
+            "ci_high": 0.27,
+            "num_tasks": 50
+          },
+          "4": {
+            "k": 4,
+            "mean": 0.26,
+            "ci_low": 0.14,
+            "ci_high": 0.38,
+            "num_tasks": 50
+          }
+        },
+        "tamper_count": 3,
+        "total_episodes": 200,
+        "timeout_count": 2,
+        "mean_turns": 3.165,
+        "mean_rollout_ms": 111.25542195999887,
+        "mean_sandbox_ms": 513.7909362750014,
+        "by_family": [
+          {
+            "family": "async_keyed_queue",
+            "num_tasks": 10,
+            "pass_at_1": 0.05,
+            "tamper_rate": 0.075,
+            "mean_turns": 3.175
+          },
+          {
+            "family": "keyset_paging",
+            "num_tasks": 10,
+            "pass_at_1": 0.0,
+            "tamper_rate": 0.0,
+            "mean_turns": 3.075
+          },
+          {
+            "family": "ledger_invariants",
+            "num_tasks": 10,
+            "pass_at_1": 0.025,
+            "tamper_rate": 0.0,
+            "mean_turns": 3.25
+          },
+          {
+            "family": "rate_limiter_window",
+            "num_tasks": 10,
+            "pass_at_1": 0.8,
+            "tamper_rate": 0.0,
+            "mean_turns": 2.6
+          },
+          {
+            "family": "spec_invoice_calc",
+            "num_tasks": 10,
+            "pass_at_1": 0.0,
+            "tamper_rate": 0.0,
+            "mean_turns": 3.725
+          }
+        ]
+      }
+    }
+  ]
+}

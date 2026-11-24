@@ -1,36 +1,47 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="860" height="290" viewBox="0 0 860 290" role="img" aria-label="Systems Benchmarks: Sandbox Tail Latency &amp; Custom Triton Kernel">
+<svg xmlns="http://www.w3.org/2000/svg" width="860" height="320" viewBox="0 0 860 320" role="img" aria-label="Systems Benchmarks: shapens/tri Scaling &amp; Custom Triton Kernel">
 <style>text { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }.title { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; font-size: 14px; font-weight: 600; fill: #e6edf3; }.sub { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; font-size: 11px; fill: #8b949e; }.ax { font-size: 10px; fill: #8b949e; }.lbl { font-size: 11px; fill: #e6edf3; }.grid { stroke: #30363d; stroke-width: 1; stroke-dasharray: 2 3; }</style>
-<rect x="0.5" y="0.5" width="859" height="289" rx="10" fill="#0d1117" stroke="#30363d"/>
-<rect x="14" y="14" width="410" height="262" rx="8" fill="#161b22" stroke="#30363d"/>
-<text x="30" y="38" class="title">Sandbox Grader Latency &amp; Throughput</text>
-<text x="30" y="54" class="sub">p50 / p95 (conc=1) &amp; conc=8 throughput · all_correct=True</text>
-<text x="30" y="84" class="lbl">local_subprocess (no isol.)</text>
-<text x="408" y="84" text-anchor="end" class="ax">68.5/s @c8</text>
-<rect x="30" y="92" width="18.8" height="12" rx="3" fill="#58a6ff" fill-opacity="0.28"/>
-<rect x="30" y="92" width="6.0" height="12" rx="3" fill="#58a6ff"/>
-<text x="30" y="118" class="ax">p50=34ms · p95=171ms</text>
-<text x="30" y="146" class="lbl">shapens/tri HTTP (CoW)</text>
-<text x="408" y="146" text-anchor="end" class="ax">16.9/s @c8</text>
-<rect x="30" y="154" width="31.7" height="12" rx="3" fill="#3fb950" fill-opacity="0.28"/>
-<rect x="30" y="154" width="16.3" height="12" rx="3" fill="#3fb950"/>
-<text x="30" y="180" class="ax">p50=148ms · p95=288ms</text>
-<text x="30" y="208" class="lbl">Modal Sandbox (ephemeral)</text>
-<text x="408" y="208" text-anchor="end" class="ax">7.5/s @c8</text>
-<rect x="30" y="216" width="260.0" height="12" rx="3" fill="#d29922" fill-opacity="0.28"/>
-<rect x="30" y="216" width="113.6" height="12" rx="3" fill="#d29922"/>
-<text x="30" y="242" class="ax">p50=1032ms · p95=2361ms</text>
-<rect x="436" y="14" width="410" height="262" rx="8" fill="#161b22" stroke="#30363d"/>
+<rect x="0.5" y="0.5" width="859" height="319" rx="10" fill="#0d1117" stroke="#30363d"/>
+<rect x="14" y="14" width="410" height="292" rx="8" fill="#161b22" stroke="#30363d"/>
+<text x="30" y="38" class="title">Sandbox Latency (c=1) &amp; Peak Throughput</text>
+<text x="30" y="54" class="sub">tri native pool: 20.8× faster p50 vs Modal, 3.43× tput vs tri v1</text>
+<text x="30" y="78" class="lbl">local_subprocess (no isol.)</text>
+<text x="408" y="78" text-anchor="end" class="ax">127.1/s @c16</text>
+<rect x="30" y="84" width="18.0" height="10" rx="3" fill="#58a6ff" fill-opacity="0.28"/>
+<rect x="30" y="84" width="5.0" height="10" rx="3" fill="#58a6ff"/>
+<text x="30" y="106" class="ax">p50=34.7ms · p95=164ms</text>
+<text x="30" y="122" class="lbl">tri native pool (WAL+batch)</text>
+<text x="408" y="122" text-anchor="end" class="ax">54.5/s @c16</text>
+<rect x="30" y="128" width="21.3" height="10" rx="3" fill="#3fb950" fill-opacity="0.28"/>
+<rect x="30" y="128" width="5.5" height="10" rx="3" fill="#3fb950"/>
+<text x="30" y="150" class="ax">p50=49.6ms · p95=193ms</text>
+<text x="30" y="166" class="lbl">tri HTTP v2 (WAL+batch)</text>
+<text x="408" y="166" text-anchor="end" class="ax">27.5/s @c16</text>
+<rect x="30" y="172" width="29.7" height="10" rx="3" fill="#39c5cf" fill-opacity="0.28"/>
+<rect x="30" y="172" width="14.7" height="10" rx="3" fill="#39c5cf"/>
+<text x="30" y="194" class="ax">p50=133.3ms · p95=270ms</text>
+<text x="30" y="210" class="lbl">tri HTTP v1 (12-req legacy)</text>
+<text x="408" y="210" text-anchor="end" class="ax">15.9/s @c16</text>
+<rect x="30" y="216" width="31.7" height="10" rx="3" fill="#bc8cff" fill-opacity="0.28"/>
+<rect x="30" y="216" width="16.3" height="10" rx="3" fill="#bc8cff"/>
+<text x="30" y="238" class="ax">p50=148.0ms · p95=288ms</text>
+<text x="30" y="254" class="lbl">Modal Sandbox (ephemeral)</text>
+<text x="408" y="254" text-anchor="end" class="ax">7.5/s @c8</text>
+<rect x="30" y="260" width="260.0" height="10" rx="3" fill="#d29922" fill-opacity="0.28"/>
+<rect x="30" y="260" width="113.6" height="10" rx="3" fill="#d29922"/>
+<text x="30" y="282" class="ax">p50=1031.6ms · p95=2361ms</text>
+<rect x="436" y="14" width="410" height="292" rx="8" fill="#161b22" stroke="#30363d"/>
 <text x="452" y="38" class="title">Custom Triton Fused LogProb Kernel (H100)</text>
 <text x="452" y="54" class="sub">Qwen 152k vocab [2, 2048, 152064] bf16 · fwd err 9.5e-07</text>
-<text x="452" y="88" class="lbl">Forward + Backward Step Time (2.67× faster)</text>
-<rect x="452" y="96" width="280" height="16" rx="4" fill="#8b949e" fill-opacity="0.35"/>
-<text x="740" y="108" class="ax">PyTorch 14.85ms</text>
-<rect x="452" y="118" width="105.0" height="16" rx="4" fill="#3fb950"/>
-<text x="565.0" y="130" class="lbl">Triton 5.57ms</text>
-<text x="452" y="168" class="lbl">Peak HBM Allocated (-3.48 GB saved)</text>
-<rect x="452" y="176" width="280" height="16" rx="4" fill="#8b949e" fill-opacity="0.35"/>
-<text x="740" y="188" class="ax">PyTorch 9.28 GB</text>
-<rect x="452" y="198" width="175.0" height="16" rx="4" fill="#39c5cf"/>
-<text x="635.0" y="210" class="lbl">Triton 5.80 GB</text>
-<text x="452" y="248" class="ax">bwd max abs err: 4.66e-10 · zero [N,V] fp32 softmax tensor</text>
+<text x="452" y="96" class="lbl">Forward + Backward Step Time (2.67× faster)</text>
+<rect x="452" y="106" width="270" height="16" rx="4" fill="#8b949e" fill-opacity="0.35"/>
+<text x="730" y="118" class="ax">PyTorch 14.85ms</text>
+<rect x="452" y="128" width="101.3" height="16" rx="4" fill="#3fb950"/>
+<text x="561.3" y="140" class="lbl">Triton 5.57ms</text>
+<text x="452" y="182" class="lbl">Peak HBM Allocated (-3.48 GB saved)</text>
+<rect x="452" y="192" width="270" height="16" rx="4" fill="#8b949e" fill-opacity="0.35"/>
+<text x="730" y="204" class="ax">PyTorch 9.28 GB</text>
+<rect x="452" y="214" width="168.8" height="16" rx="4" fill="#39c5cf"/>
+<text x="628.8" y="226" class="lbl">Triton 5.80 GB</text>
+<text x="452" y="264" class="ax">bwd max abs err: 4.66e-10 · used for policy &amp; ref k3 KL</text>
+<text x="452" y="280" class="ax">eliminated 4.64 GiB fp32 softmax OOM on 7B long rollouts</text>
 </svg>

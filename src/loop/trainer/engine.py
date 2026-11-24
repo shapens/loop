@@ -14,7 +14,7 @@ import torch.nn.functional as F
 from loop.trainer.grpo import compute_group_advantages, grpo_loss
 from loop.trainer.triton_logprob import fused_shifted_logprobs
 from loop.trainer.weight_sync import assert_weights_synced, state_dict_sha256
-from loop.types import GraderMode, StepTiming, TIMStats, Trajectory
+from loop.types import GraderMode, RewardMode, StepTiming, TIMStats, Trajectory
 
 
 @dataclass(frozen=True)
@@ -42,6 +42,8 @@ class GRPOConfig:
     temperature: float = 0.8
     max_new_tokens: int = 1024
     grader_mode: GraderMode = "hardened"
+    reward_mode: RewardMode = "binary"
+    train_families: tuple[str, ...] | None = None
     eval_every: int = 5
     eval_tasks: int = 30
     eval_samples: int = 4
@@ -244,7 +246,12 @@ def grpo_train_step(
             with torch.no_grad(), disable_ctx:
                 ref_out: Any = model(input_ids=batch.input_ids, attention_mask=batch.attention_mask)
                 ref_logits: torch.Tensor = ref_out.logits if hasattr(ref_out, "logits") else ref_out
-                ref_lp = compute_shifted_logprobs(ref_logits, batch.input_ids)
+                ref_lp = (
+                    fused_shifted_logprobs(ref_logits, batch.input_ids)
+                    if cfg.use_triton_logprobs
+                    else compute_shifted_logprobs(ref_logits, batch.input_ids)
+                )
+                del ref_logits, ref_out
 
         loss, tim = grpo_loss(
             policy_lp,

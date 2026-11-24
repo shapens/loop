@@ -14,7 +14,7 @@ from loop.rollout.protocol import STOP_STRINGS
 from loop.rollout.runner import BatchedGeneration, run_episodes_batched
 from loop.trainer.engine import GRPOConfig
 from loop.trainer.modal_train import run_colocated_grpo
-from loop.types import GraderMode, Split, TaskSpec, VerifierReceipt
+from loop.types import GraderMode, RewardMode, Split, TaskSpec, VerifierReceipt
 
 _modal: Any
 try:
@@ -24,12 +24,15 @@ except ImportError:
 
 
 def grade_remote(
-    task: TaskSpec, workspace_files: dict[str, str], mode: GraderMode = "hardened"
+    task: TaskSpec,
+    workspace_files: dict[str, str],
+    mode: GraderMode = "hardened",
+    reward_mode: RewardMode = "binary",
 ) -> VerifierReceipt:
     """Grade via Modal when deployed, otherwise run isolated local grader."""
     if _modal is None:
-        return grade_workspace(task, workspace_files, mode=mode)
-    raw = grade_task_modal.remote(asdict(task), workspace_files, mode)
+        return grade_workspace(task, workspace_files, mode=mode, reward_mode=reward_mode)
+    raw = grade_task_modal.remote(asdict(task), workspace_files, mode, reward_mode)
     return VerifierReceipt(**raw)
 
 
@@ -56,7 +59,10 @@ if _modal is not None:
 
     @app.function(image=cpu_image, timeout=60, retries=0)
     def grade_task_modal(
-        task_dict: dict[str, Any], workspace_files: dict[str, str], mode: GraderMode = "hardened"
+        task_dict: dict[str, Any],
+        workspace_files: dict[str, str],
+        mode: GraderMode = "hardened",
+        reward_mode: RewardMode = "binary",
     ) -> dict[str, Any]:
         task = TaskSpec(
             **{
@@ -64,7 +70,7 @@ if _modal is not None:
                 "allowed_edit_globs": tuple(task_dict["allowed_edit_globs"]),
             }
         )
-        receipt = grade_workspace(task, workspace_files, mode=mode)
+        receipt = grade_workspace(task, workspace_files, mode=mode, reward_mode=reward_mode)
         return asdict(receipt)
 
     @app.function(
@@ -226,13 +232,17 @@ if _modal is not None:
         use_mis: bool = True,
         mis_max_ratio: float = 2.0,
         stale_steps: int = 0,
+        kl_coef: float = 0.01,
         micro_batch_size: int = 2,
         grader_mode: GraderMode = "hardened",
+        reward_mode: RewardMode = "binary",
+        train_families: str = "",
         eval_every: int = 4,
         eval_tasks: int = 30,
         eval_samples: int = 4,
     ) -> dict[str, Any]:
         """Run co-located H100 vLLM + PyTorch PEFT LoRA GRPO training and commit artifacts."""
+        fams = tuple(x.strip() for x in train_families.split(",") if x.strip()) or None
         cfg = GRPOConfig(
             model_name=model,
             steps=steps,
@@ -242,8 +252,11 @@ if _modal is not None:
             use_mis=use_mis,
             mis_max_ratio=mis_max_ratio,
             stale_steps=stale_steps,
+            kl_coef=kl_coef,
             micro_batch_size=micro_batch_size,
             grader_mode=grader_mode,
+            reward_mode=reward_mode,
+            train_families=fams,
             eval_every=eval_every,
             eval_tasks=eval_tasks,
             eval_samples=eval_samples,
@@ -300,8 +313,11 @@ if _modal is not None:
         use_mis: bool = True,
         mis_max_ratio: float = 2.0,
         stale_steps: int = 0,
+        kl_coef: float = 0.01,
         micro_batch_size: int = 2,
         grader_mode: GraderMode = "hardened",
+        reward_mode: RewardMode = "binary",
+        train_families: str = "",
         eval_every: int = 4,
         eval_tasks: int = 30,
         eval_samples: int = 4,
@@ -316,8 +332,11 @@ if _modal is not None:
             use_mis=use_mis,
             mis_max_ratio=mis_max_ratio,
             stale_steps=stale_steps,
+            kl_coef=kl_coef,
             micro_batch_size=micro_batch_size,
             grader_mode=grader_mode,
+            reward_mode=reward_mode,
+            train_families=train_families,
             eval_every=eval_every,
             eval_tasks=eval_tasks,
             eval_samples=eval_samples,

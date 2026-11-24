@@ -5,6 +5,7 @@ from typing import Literal
 
 Split = Literal["train", "eval"]
 GraderMode = Literal["hardened", "naive"]
+RewardMode = Literal["binary", "subtest"]
 
 
 @dataclass(frozen=True)
@@ -38,6 +39,8 @@ class VerifierReceipt:
     stdout: str
     stderr: str
     manifest_sha256: str
+    subtests_passed: int = 0
+    subtests_total: int = 0
 
 
 @dataclass

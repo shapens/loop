@@ -7,7 +7,7 @@ from dataclasses import dataclass
 
 from loop.envs.sandbox import SandboxBackend
 from loop.rollout.protocol import TrajectoryBuilder, apply_tool_call, parse_tool_call
-from loop.types import GraderMode, TaskSpec, Trajectory
+from loop.types import GraderMode, RewardMode, TaskSpec, Trajectory
 
 SYSTEM_PROMPT = (
     "You are a precise software engineering agent fixing bugs in a Python repository.\n"
@@ -102,7 +102,9 @@ def run_episodes_batched(
     max_turns: int = 6,
     policy_version: int = 0,
     grader_mode: GraderMode = "hardened",
+    reward_mode: RewardMode = "binary",
     max_sandbox_workers: int = 16,
+    max_context_tokens: int | None = None,
     format_initial: FormatInitFn = format_chatml_initial,
     format_observation: FormatObsFn = format_chatml_observation,
 ) -> list[Trajectory]:
@@ -134,6 +136,10 @@ def run_episodes_batched(
 
     with ThreadPoolExecutor(max_workers=max(1, max_sandbox_workers)) as pool:
         for _turn in range(max_turns):
+            if max_context_tokens is not None:
+                for s in states:
+                    if not s.done and len(s.builder.token_ids) >= max_context_tokens:
+                        s.done = True
             active = [s for s in states if not s.done]
             if not active:
                 break
@@ -178,7 +184,16 @@ def run_episodes_batched(
 
         # Grade all finished workspaces concurrently.
         grade_futs = [
-            (state, pool.submit(sandbox.grade, state.task, state.workspace, grader_mode))
+            (
+                state,
+                pool.submit(
+                    sandbox.grade,
+                    state.task,
+                    state.workspace,
+                    grader_mode,
+                    reward_mode,
+                ),
+            )
             for state in states
         ]
         trajectories: list[Trajectory] = []

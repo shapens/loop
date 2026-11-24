@@ -783,10 +783,13 @@ def generate_task(family: str, seed: int, split: Split = "train") -> TaskSpec:
     raise ValueError(f"Unknown task family: {family}")
 
 
-def generate_split(split: Split, count: int) -> list[TaskSpec]:
+def generate_split(
+    split: Split, count: int, families: tuple[str, ...] | None = None
+) -> list[TaskSpec]:
     base = _split_offset(split)
+    active = families if families else FAMILIES
     tasks: list[TaskSpec] = []
     for i in range(count):
-        family = FAMILIES[i % len(FAMILIES)]
+        family = active[i % len(active)]
         tasks.append(generate_task(family=family, seed=base + i, split=split))
     return tasks

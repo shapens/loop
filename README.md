@@ -17,19 +17,26 @@ Full technical write-up (including what broke first & negative/nuanced results):
 
 ![Qwen2.5-Coder-7B 5-Family RLVR Results](docs/assets/headline_7b_5fam.svg)
 
-### 2. Controlled Goodhart / Reward-Hacking Ablation (Hardened vs. Naive Verifier)
+### 2. Breaking the Sparse Multi-File Wall: Why Dense Sub-Test Shaping Hurts (`-9.5 pp`) While Binary `G=16` Curriculum Explodes (`0% → 70%`)
+Controlled 3-way ablation on `Qwen2.5-Coder-7B-Instruct` (50 held-out tasks × 4, always binary-graded):
+* **Dense sub-test shaping (`0.5 × passed/total` + `0.5` full bonus, `G=8`):** degraded overall `pass@1` by **`-9.5 pp`** (`42.5%` vs `52.0%` binary; `async` `-30 pp`, `ledger` `-15 pp`) and left `keyset_paging` at **`0.0%`** because GRPO `(r - μ)/σ` amplified noisy partial-credit gaps into unit-variance gradients.
+* **Pure binary RLVR + `G=16` hard-family curriculum (15 steps, `635s`):** shattered the 3-file `keyset_paging` wall (**`0.0% → 70.0%` held-out `pass@1`, +70 pp!**) and hit a new overall **`pass@4 = 68.0%`** with zero forgetting on the 3 untrained families (`rate` `90%`, `ledger` `65%`, `async` `7.5%`).
+
+![7B Sparse-Family Ablation: Sub-Test Shaping vs Binary G=16 Curriculum](docs/assets/ablation_sparse_curriculum.svg)
+
+### 3. Controlled Goodhart / Reward-Hacking Ablation (Hardened vs. Naive Verifier)
 `Qwen2.5-Coder-3B-Instruct` · 20 GRPO steps · Hardened lifts true `pass@1` **5.75×** (`6.7% → 38.3%`, non-overlapping 95% CIs) with emergent multi-turn depth (`2.82 → 4.68` turns); Naive hits **100% fake train reward** while true `pass@1` stalls at `19.2%` and `ledger_invariants` collapses to `0%`:
 
 ![Hardened vs Naive Goodhart Divergence](docs/assets/ablation_goodhart.svg)
 
-### 3. Systems Wins: Custom Triton Kernel (2.67× H100) & `shapens/tri` Sandbox Latency (7.0× p50)
-* **Custom Triton online-LSE logprob kernel** ([triton_logprob.py](src/loop/trainer/triton_logprob.py)) on Qwen's `152,064` vocab `[2, 2048, 152064]` `bf16`: **`2.67×` faster** (`14.85 ms → 5.57 ms`), **`3.48 GB` peak HBM saved (-37.5%)**, `fwd err = 9.5e-7`, `bwd err = 4.7e-10`.
-* **`shapens/tri` HTTP copy-on-write workspaces** ([sandbox.py](src/loop/envs/sandbox.py)) vs. ephemeral Modal Sandboxes: **`7.0×` lower p50** (`148 ms` vs `1,032 ms`), **`8.2×` lower p95**, and **`2.27×` higher conc=8 throughput** (`16.95/s` vs `7.48/s`).
+### 4. Systems Wins: `shapens/tri` Native Pool (`20.8×` p50 vs Modal, `3.43×` vs `tri` v1) & Custom Triton Kernel (`2.67×` H100)
+* **`shapens/tri` Go `tri-server` + persistent worker pool + WAL/`IMMEDIATE` + single-HTTP `/v0/batch` `files write-batch`** ([sandbox.py](src/loop/envs/sandbox.py), shipped in [`shapens/tri@485a523`](https://github.com/shapens/tri/commit/485a523)): **`49.6 ms` p50 @ `c=1`** (**`20.8×` faster** than Modal Sandboxes `1,032 ms`, **`3.0×` faster** than `tri` v1 `148 ms`, within `14.9 ms` of unisolated `subprocess`), **`54.54 gradings/sec` @ `c=16`** (**`3.43×` v1 throughput**), `0` worker crashes, `all_correct=True` across `c=1..64`.
+* **Custom Triton online-LSE logprob kernel** ([triton_logprob.py](src/loop/trainer/triton_logprob.py)) on Qwen's `152,064` vocab `[2, 2048, 152064]` `bf16`: **`2.67×` faster** (`14.85 ms → 5.57 ms`), **`3.48 GB` peak HBM saved (-37.5%)**, `fwd err = 9.5e-7`, `bwd err = 4.7e-10`; used for both policy and k3 KL reference passes.
 
-![Systems Benchmarks: Sandbox Latency & Custom Triton Kernel](docs/assets/systems_bench.svg)
+![Systems Benchmarks: Sandbox Scaling & Custom Triton Kernel](docs/assets/systems_bench.svg)
 
-### 4. Async Off-Policy Staleness (`lag = 3`, `lr = 8e-5`): Vanilla GRPO vs. MIS
-Under 3-step rollout staleness, max $|\Delta \log p|$ rises ~5× (`1.49–1.66`), MIS actively masks tail spikes (`r > 1.5`), and both policies climb from `~6% → 36.5–37.0%` `pass@1` across 50 held-out tasks while `sandbox_ms` reaches **32%–67% of step wall-clock time**:
+### 5. Async Off-Policy Staleness (`lag = 3` vs `lag = 8, kl = 0`): Vanilla GRPO vs. MIS
+At `lag=3` (`lr=8e-5, kl=0.01`), max $|\Delta \log p|$ rises ~5× (`1.49–1.66`) and both converge (`36.5%–37.0%`). Pushing to `lag=8, kl=0.0, lr=1.5e-4` drives max $|\Delta \log p|$ to **`4.67–5.77` (`106×–322×` ratio)**: MIS (`r ≤ 1.5`) accelerates early learning **`3×`** (`18.0%` vs `6.0%` at step 5) and prevents late-run tampering (`0.0%` vs `7.5%`), while both plateau near `17%–17.5%` because steps 1–9 sample from the frozen base policy.
 
 ![Async Off-Policy Staleness: Vanilla GRPO vs MIS](docs/assets/ablation_async_mis.svg)
 
