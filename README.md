@@ -18,9 +18,9 @@ Full technical write-up (including what broke first & negative/nuanced results):
 ![Qwen2.5-Coder-7B 5-Family RLVR Results](docs/assets/headline_7b_5fam.svg)
 
 ### 2. Breaking the Sparse Multi-File Wall: Why Dense Sub-Test Shaping Hurts (`-9.5 pp`) While Binary `G=16` Curriculum Explodes (`0% → 70%`)
-Controlled 3-way ablation on `Qwen2.5-Coder-7B-Instruct` (50 held-out tasks × 4, always binary-graded):
-* **Dense sub-test shaping (`0.5 × passed/total` + `0.5` full bonus, `G=8`):** degraded overall `pass@1` by **`-9.5 pp`** (`42.5%` vs `52.0%` binary; `async` `-30 pp`, `ledger` `-15 pp`) and left `keyset_paging` at **`0.0%`** because GRPO `(r - μ)/σ` amplified noisy partial-credit gaps into unit-variance gradients.
-* **Pure binary RLVR + `G=16` hard-family curriculum (15 steps, `635s`):** shattered the 3-file `keyset_paging` wall (**`0.0% → 70.0%` held-out `pass@1`, +70 pp!**) and hit a new overall **`pass@4 = 68.0%`** with zero forgetting on the 3 untrained families (`rate` `90%`, `ledger` `65%`, `async` `7.5%`).
+Controlled 7B ablations on 50 held-out tasks × 4 (always binary-graded):
+* **Dense sub-test shaping (`0.5 × passed/total` + `0.5` full bonus, `G=8`, 1-variable ablation vs Study A):** degraded overall `pass@1` by **`-9.5 pp`** (`42.5%` vs `52.0%` binary; `async` `-30 pp`, `ledger` `-15 pp`) and left `keyset_paging` at **`0.0%`** because GRPO `(r - μ)/σ` amplified noisy partial-credit gaps into unit-variance gradients.
+* **Pure binary RLVR + `G=16` + hard-family curriculum (`lr=3e-5`, 15 steps, `635s`):** combined large-group exploration & hard-family curriculum broke `keyset_paging` from **`0.0% → 70.0%` (+70 pp)** and hit a new overall **`pass@4 = 68.0%`** with zero forgetting on the 3 untrained families (`rate` `90%`, `ledger` `65%`, `async` `7.5%`).
 
 ![7B Sparse-Family Ablation: Sub-Test Shaping vs Binary G=16 Curriculum](docs/assets/ablation_sparse_curriculum.svg)
 
@@ -29,8 +29,8 @@ Controlled 3-way ablation on `Qwen2.5-Coder-7B-Instruct` (50 held-out tasks × 4
 
 ![Hardened vs Naive Goodhart Divergence](docs/assets/ablation_goodhart.svg)
 
-### 4. Systems Wins: `shapens/tri` Native Pool (`20.8×` p50 vs Modal, `3.43×` vs `tri` v1) & Custom Triton Kernel (`2.67×` H100)
-* **`shapens/tri` Go `tri-server` + persistent worker pool + WAL/`IMMEDIATE` + single-HTTP `/v0/batch` `files write-batch`** ([sandbox.py](src/loop/envs/sandbox.py), shipped in [`shapens/tri@485a523`](https://github.com/shapens/tri/commit/485a523)): **`49.6 ms` p50 @ `c=1`** (**`20.8×` faster** than Modal Sandboxes `1,032 ms`, **`3.0×` faster** than `tri` v1 `148 ms`, within `14.9 ms` of unisolated `subprocess`), **`54.54 gradings/sec` @ `c=16`** (**`3.43×` v1 throughput**), `0` worker crashes, `all_correct=True` across `c=1..64`.
+### 4. Systems Wins: `shapens/tri` Seatbelt-Isolated Pool (`66.5 ms` p50, `54.5/s @ c16`) & Custom Triton Kernel (`2.67×` H100)
+* **`shapens/tri` Go `tri-server` + persistent workers + WAL/`IMMEDIATE` + single-HTTP `/v0/batch` `files write-batch`** ([sandbox.py](src/loop/envs/sandbox.py), shipped in [`shapens/tri@485a523`](https://github.com/shapens/tri/commit/485a523)): with mandatory OS sandboxing (`--run-sandbox required`, macOS Seatbelt on local loopback), hits **`66.5 ms` p50 @ `c=1`** (`49.6 ms` unsandboxed) and **`54.52 gradings/sec` @ `c=16`** (**`3.43×` over `tri` v1**, **`0` crashes**, `all_correct=True` across `c=1..64`)—vs. remote ephemeral cloud Modal Sandboxes (`1,032 ms` p50, `7.48/s @ c8`, which include WAN RTT + gVisor container boot).
 * **Custom Triton online-LSE logprob kernel** ([triton_logprob.py](src/loop/trainer/triton_logprob.py)) on Qwen's `152,064` vocab `[2, 2048, 152064]` `bf16`: **`2.67×` faster** (`14.85 ms → 5.57 ms`), **`3.48 GB` peak HBM saved (-37.5%)**, `fwd err = 9.5e-7`, `bwd err = 4.7e-10`; used for both policy and k3 KL reference passes.
 
 ![Systems Benchmarks: Sandbox Scaling & Custom Triton Kernel](docs/assets/systems_bench.svg)

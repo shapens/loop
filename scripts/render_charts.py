@@ -424,13 +424,13 @@ def render_systems_bench() -> None:
     svg = _svg_header(860, 320, "Systems Benchmarks: shapens/tri Scaling & Custom Triton Kernel")
     svg += f'<rect x="14" y="14" width="410" height="292" rx="8" fill="{CARD}" stroke="{BORDER}"/>\n'
     svg += '<text x="30" y="38" class="title">Sandbox Latency (c=1) &amp; Peak Throughput</text>\n'
-    svg += '<text x="30" y="54" class="sub">tri native pool: 20.8× faster p50 vs Modal, 3.43× tput vs tri v1</text>\n'
+    svg += '<text x="30" y="54" class="sub">Local Seatbelt tri pool (66.5ms, 54.5/s) vs remote cloud Modal</text>\n'
     rows = [
         ("local_subprocess (no isol.)", c1["local_subprocess"], c16["local_subprocess"], "@c16", C_BLUE),
-        ("tri native pool (WAL+batch)", c1["shapens_tri_native_pool"], c16["shapens_tri_native_pool"], "@c16", C_GREEN),
+        ("tri native + Seatbelt (WAL+batch)", c1["shapens_tri_native_seatbelt"], c16["shapens_tri_native_seatbelt"], "@c16", C_GREEN),
         ("tri HTTP v2 (WAL+batch)", c1["shapens_tri_http_v2_batch"], c16["shapens_tri_http_v2_batch"], "@c16", C_CYAN),
         ("tri HTTP v1 (12-req legacy)", c1["shapens_tri_http_v1"], c16["shapens_tri_http_v1"], "@c16", C_PURPLE),
-        ("Modal Sandbox (ephemeral)", c1["modal_sandbox_ephemeral"], c8["modal_sandbox_ephemeral"], "@c8", C_AMBER),
+        ("Modal Sandbox (cloud gVisor)", c1["modal_sandbox_ephemeral"], c8["modal_sandbox_ephemeral"], "@c8", C_AMBER),
     ]
     max_ms = max(r["p95_ms"] for r in c1.values())
     for idx, (label, r1, rpk, tag, col) in enumerate(rows):

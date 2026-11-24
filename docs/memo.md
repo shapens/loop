@@ -62,16 +62,24 @@ Switching to native ChatML + escape-free `<write path="...">...</write>`, `<run_
 2. **`shapens/tri` High-Concurrency Substrate Upgrade (`src/loop/bench_sandboxes.py`, `all_correct=True`, 64 gradings/level):**
    * Our initial benchmark exposed a `c16` plateau (`15.89/s`, `835 ms` p50) caused by 12 HTTP round-trips per grading, SQLite `DELETE` journal mode, exclusive `admin_lock` + `PRAGMA wal_checkpoint(TRUNCATE)` per request, and a multi-worker `WAL ↔ DELETE` startup race in `tri-server`.
    * Shipped atomic `tri files write-batch`, SQLite `WAL` + `IMMEDIATE` + lock-free fast-open, and HTTP/1.1 keep-alive in [`shapens/tri@485a523`](https://github.com/shapens/tri/commit/485a523), plus single-HTTP `/v0/batch` execution in `TriSandboxBackend`:
-     * `modal_sandbox_ephemeral`: `1,031.6 ms` p50 / `2,361.4 ms` p95 (`7.48/s @c8`)
-     * `shapens_tri_http` **v1** (12-req DELETE): `148.0 ms` p50 / `288.3 ms` p95 (`15.89/s @c16`, `835.0 ms` p50 @c16)
-     * `shapens_tri_http_v2_batch` (`tri serve` WAL+batch): `133.3 ms` p50 (`27.48/s @c16`, `29.01/s @c32`, `26.17/s @c64`)
-     * **`shapens_tri_native_pool`** (Go `tri-server` 16–32 workers + WAL + `IMMEDIATE` + `/v0/batch`): **`49.6 ms` p50 @c1** (**`20.8×` faster** than Modal, **`3.0×` faster** than `tri` v1, within `14.9 ms` of raw unisolated `local_subprocess` `34.7 ms`), **`54.54/s @c16`** (**`3.43×` v1 throughput**, **`3.84×` lower `c16` p50 at `217.3 ms`**), **`44.69/s @c32`**, **`37.69/s @c64`**, `0` worker crashes.
+     * `modal_sandbox_ephemeral` (remote cloud gVisor container, includes WAN RTT): `1,031.6 ms` p50 / `2,361.4 ms` p95 (`7.48/s @c8`)
+     * `shapens_tri_http` **v1** (local loopback, 12-req DELETE): `148.0 ms` p50 / `288.3 ms` p95 (`15.89/s @c16`, `835.0 ms` p50 @c16)
+     * `shapens_tri_http_v2_batch` (local loopback, `tri serve` WAL+batch): `133.3 ms` p50 (`27.48/s @c16`, `29.01/s @c32`, `26.17/s @c64`)
+     * **`shapens_tri_native_seatbelt`** (local Go `tri-server` 16–32 workers + WAL/`IMMEDIATE` + `/v0/batch` + **`--run-sandbox required` macOS Seatbelt OS isolation**): **`66.5 ms` p50 @c1** (`49.6 ms` unsandboxed), **`47.75/s @c8`**, **`54.52/s @c16`** (**`3.43×` v1 throughput**, **`3.98×` lower `c16` p50 at `209.8 ms`**), **`45.95/s @c32`**, **`39.33/s @c64`**, `0` worker crashes.
 
 ### Study E & F — Breaking the Sparse Multi-File Wall on `7B`: Dense Sub-Test Shaping vs. Binary `G=16` Curriculum
 * **Question:** Why did `keyset_paging` (`2.5%`) and `spec_invoice_calc` (`2.5%`) stall in Study A, and what actually unlocks them?
-* **Study E — Dense Sub-Test Shaping (`grpo_7b_5fam_subtest`, identical 20-step config to Study A, tamper-gated `0.5 × passed/total` + `0.5` full bonus):**
+* **Study E — Dense Sub-Test Shaping (`grpo_7b_5fam_subtest`, strict 1-variable ablation vs Study A, tamper-gated `0.5 × passed/total` + `0.5` full bonus):**
   * **Negative result (`-9.5 pp` regression!):** Held-out binary `pass@1` rose only `30.0% → 42.5%` (vs `52.0%` binary); `async_keyed_queue` fell `-30 pp` (`27.5%` vs `57.5%`), `ledger_invariants` fell `-15 pp` (`82.5%` vs `97.5%`), and `keyset_paging` stayed **`0.0%`**.
   * **Mechanism:** GRPO group normalization `(r - μ) / σ` amplifies small partial-credit gaps (`0.25` vs `0.125`) into full unit-variance positive advantages, reinforcing partially buggy trajectories and diluting clean full-fix gradients.
-* **Study F — Pure Binary RLVR + Larger Group Exploration (`G=16`) + Hard-Family Curriculum (`grpo_7b_hard_curriculum_g16`, 15 steps, `635s`, training only on `keyset_paging, spec_invoice_calc`, evaluated on all 5 families):**
+* **Study F — Pure Binary RLVR + Larger Group Exploration (`G=16`) + Hard-Family Curriculum (`grpo_7b_hard_curriculum_g16`, 15 steps, `635s`, `lr=3e-5`, training only on `keyset_paging, spec_invoice_calc`, evaluated on all 5 families):**
   * **Breakthrough:** `keyset_paging` exploded from **`0.0% → 70.0%` held-out `pass@1` (+70.0 pp)**, lifting overall 5-family **`pass@4` to a new high of `68.0%`** `[56.0%, 80.0%]` (`pass@1` `32.0% → 47.0%`) with **zero catastrophic forgetting** on the 3 untrained families (`rate` `85% → 90%`, `ledger` `67.5% → 65%`, `async` `7.5% → 7.5%`).
   * **Remaining boundary:** `spec_invoice_calc` remained at `2.5%` even at `G=16`, cleanly marking the `pass@G ≈ 0` cold-start threshold where pure zero-shot RLVR needs SFT warm-start or `G ≥ 64` exploration.
+
+---
+
+## 4. Scope & Honest Caveats
+
+1. **Micro-lab tasks, not SWE-bench:** All 5 families are synthetic 1–3 file stdlib Python repos (~50–100 LoC, ~40ms `unittest` runs). `loop` is designed as a contamination-free micro-lab to isolate RLVR mechanisms cheaply—not a claim of SWE-bench Verified SOTA.
+2. **Sandbox comparison geometry:** `shapens/tri` benchmarks ran on local macOS loopback (`127.0.0.1`) with macOS Seatbelt OS isolation (`--run-sandbox required`), whereas Modal Sandboxes ran over the public internet with cold cloud gVisor container boot. The benchmark isolates the architectural delta between persistent CoW workspaces and ephemeral cloud containers, not same-network/same-hypervisor parity. On Modal H100 training runs, grading used `LocalSubprocessSandbox` inside the GPU container.
+3. **Single-seed LoRA `r=16` runs & multi-variable Study F:** Each RL run is a single seed over 15–20 steps with LoRA `r=16` (which naturally dampens some off-policy instability relative to full-weight/MoE RL). Study E vs. Study A is a strict 1-variable ablation (`reward_mode` only); Study F intentionally combined `G=16`, hard-family curriculum, and `lr=3e-5` to test breaking the sparse wall.

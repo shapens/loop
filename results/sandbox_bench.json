@@ -229,5 +229,60 @@
     "p95_ms": 1068.0,
     "p99_ms": 1068.0,
     "all_correct": true
+  },
+  {
+    "backend": "shapens_tri_native_seatbelt",
+    "concurrency": 1,
+    "total_gradings": 64,
+    "wall_ms": 5940.3,
+    "throughput_per_sec": 10.77,
+    "p50_ms": 66.5,
+    "p95_ms": 205.8,
+    "p99_ms": 231.1,
+    "all_correct": true
+  },
+  {
+    "backend": "shapens_tri_native_seatbelt",
+    "concurrency": 8,
+    "total_gradings": 64,
+    "wall_ms": 1340.3,
+    "throughput_per_sec": 47.75,
+    "p50_ms": 120.1,
+    "p95_ms": 298.2,
+    "p99_ms": 314.3,
+    "all_correct": true
+  },
+  {
+    "backend": "shapens_tri_native_seatbelt",
+    "concurrency": 16,
+    "total_gradings": 64,
+    "wall_ms": 1173.8,
+    "throughput_per_sec": 54.52,
+    "p50_ms": 209.8,
+    "p95_ms": 548.9,
+    "p99_ms": 618.1,
+    "all_correct": true
+  },
+  {
+    "backend": "shapens_tri_native_seatbelt",
+    "concurrency": 32,
+    "total_gradings": 64,
+    "wall_ms": 1392.7,
+    "throughput_per_sec": 45.95,
+    "p50_ms": 477.7,
+    "p95_ms": 1075.9,
+    "p99_ms": 1229.8,
+    "all_correct": true
+  },
+  {
+    "backend": "shapens_tri_native_seatbelt",
+    "concurrency": 64,
+    "total_gradings": 64,
+    "wall_ms": 1627.1,
+    "throughput_per_sec": 39.33,
+    "p50_ms": 827.3,
+    "p95_ms": 1556.4,
+    "p99_ms": 1611.5,
+    "all_correct": true
   }
 ]
