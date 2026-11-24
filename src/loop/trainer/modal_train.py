@@ -118,6 +118,8 @@ def run_colocated_grpo(
         return generate_batch
 
     def run_eval(step_idx: int, lora_req: Any | None) -> dict[str, Any]:
+        # Always evaluate held-out tasks with the hardened ground-truth grader so naive-grader
+        # reward-hacking runs reveal the gap between inflated train reward and true accuracy.
         eval_trajs = run_episodes_batched(
             eval_pool,
             samples_per_task=cfg.eval_samples,
@@ -126,12 +128,12 @@ def run_colocated_grpo(
             sandbox=sandbox,
             max_turns=cfg.max_turns,
             policy_version=step_idx,
-            grader_mode=cfg.grader_mode,
+            grader_mode="hardened",
         )
         rep = summarize_eval(
             model=f"{cfg.model_name}@step{step_idx}",
             split="eval",
-            grader_mode=cfg.grader_mode,
+            grader_mode="hardened",
             tasks=eval_pool,
             trajectories=eval_trajs,
         )
