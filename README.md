@@ -1,66 +1,92 @@
 # loop
 
-Minimal, reproducible **multi-turn coding RLVR** engine and empirical study under the `shapens` org.
+[![CI](https://github.com/shapens/loop/actions/workflows/ci.yml/badge.svg)](https://github.com/shapens/loop/actions/workflows/ci.yml)
 
-> **Thesis:** Multi-turn coding RL breaks in three measurable places—**(1) sandbox tail latency** starving GPUs, **(2) live reward hacking** against naive coding verifiers, and **(3) train–inference mismatch (TIM) & policy staleness** destabilizing GRPO. `loop` measures and solves all three end-to-end on <$300 of burst GPU compute.
+Minimal, from-scratch **multi-turn coding RLVR engine** and empirical study under [`shapens`](https://github.com/shapens) (solo author).
 
-## Latest Empirical Results (1×H100, Qwen2.5-Coder-3B-Instruct, 20 GRPO Steps)
+> **Thesis:** Multi-turn coding RL breaks in three measurable places—**(1) sandbox tail latency** starving GPUs, **(2) live reward hacking / Goodharting** against naive verifiers, and **(3) train–inference mismatch (TIM) & vocab HBM pressure** during policy updates. `loop` builds the full stack from scratch (PyTorch GRPO + custom Triton fused logprob kernel + vLLM LoRA hot-reload + hardened/`shapens/tri` sandboxes) and proves all three empirically on <$10 of burst Modal H100 compute.
 
-Full write-up & reproduction commands: [docs/results-qwen3b-ablation.md](docs/results-qwen3b-ablation.md)
+Full technical write-up (including what broke first & negative/nuanced results): **[docs/memo.md](docs/memo.md)**
 
-| Training Verifier | Peak Train Reward | Held-Out `pass@1` (s0 → s20, 95% CI) | Held-Out `pass@4` | Mean Turns (s0 → s20) |
-| :--- | :---: | :---: | :---: | :---: |
-| **Hardened** (pristine + hidden tests) | `53.1%` | `6.7%` → **`38.3%`** `[24.2%, 53.3%]` (**+31.7 pp**) | `23.3%` → **`56.7%`** | `2.82 → 4.68` |
-| **Naive** (workspace tests only) | `100.0%` | `8.3%` → `19.2%` `[9.2%, 29.2%]` (Goodhart stall) | `30.0%` → `33.3%` | `2.79 → 2.88` |
+---
+
+## Empirical Highlights (All Reproduced on NVIDIA H100 80GB)
+
+### 1. Headline 7B Multi-Turn RLVR Across 5 Coding Families (Live Triton Kernel)
+`Qwen2.5-Coder-7B-Instruct` · 20 GRPO steps · 50 held-out tasks × 4 samples (200 episodes) · `pass@1` **`32.5% → 52.0%` (+19.5 pp)** · `pass@4` **`50.0% → 64.0%`** · `async_keyed_queue` (asyncio lock-handover race) **`7.5% → 57.5%` (+50 pp)**:
+
+![Qwen2.5-Coder-7B 5-Family RLVR Results](docs/assets/headline_7b_5fam.svg)
+
+### 2. Controlled Goodhart / Reward-Hacking Ablation (Hardened vs. Naive Verifier)
+`Qwen2.5-Coder-3B-Instruct` · 20 GRPO steps · Hardened lifts true `pass@1` **5.75×** (`6.7% → 38.3%`, non-overlapping 95% CIs) with emergent multi-turn depth (`2.82 → 4.68` turns); Naive hits **100% fake train reward** while true `pass@1` stalls at `19.2%` and `ledger_invariants` collapses to `0%`:
+
+![Hardened vs Naive Goodhart Divergence](docs/assets/ablation_goodhart.svg)
+
+### 3. Systems Wins: Custom Triton Kernel (2.67× H100) & `shapens/tri` Sandbox Latency (7.0× p50)
+* **Custom Triton online-LSE logprob kernel** ([triton_logprob.py](src/loop/trainer/triton_logprob.py)) on Qwen's `152,064` vocab `[2, 2048, 152064]` `bf16`: **`2.67×` faster** (`14.85 ms → 5.57 ms`), **`3.48 GB` peak HBM saved (-37.5%)**, `fwd err = 9.5e-7`, `bwd err = 4.7e-10`.
+* **`shapens/tri` HTTP copy-on-write workspaces** ([sandbox.py](src/loop/envs/sandbox.py)) vs. ephemeral Modal Sandboxes: **`7.0×` lower p50** (`148 ms` vs `1,032 ms`), **`8.2×` lower p95**, and **`2.27×` higher conc=8 throughput** (`16.95/s` vs `7.48/s`).
+
+![Systems Benchmarks: Sandbox Latency & Custom Triton Kernel](docs/assets/systems_bench.svg)
+
+### 4. Async Off-Policy Staleness (`lag = 3`, `lr = 8e-5`): Vanilla GRPO vs. MIS
+Under 3-step rollout staleness, max $|\Delta \log p|$ rises ~5× (`1.49–1.66`), MIS actively masks tail spikes (`r > 1.5`), and both policies climb from `~6% → 36.5–37.0%` `pass@1` across 50 held-out tasks while `sandbox_ms` reaches **32%–67% of step wall-clock time**:
+
+![Async Off-Policy Staleness: Vanilla GRPO vs MIS](docs/assets/ablation_async_mis.svg)
+
+---
 
 ## Architecture
 
 ```text
 src/loop/
-├── types.py          # Strict data contracts (TaskSpec, Trajectory, VerifierReceipt, TIMStats)
+├── types.py                  # Strict data contracts (TaskSpec, Trajectory, VerifierReceipt, TIMStats)
+├── bench_sandboxes.py        # p50/p95/p99 & throughput concurrency benchmark harness
 ├── envs/
-│   ├── generator.py  # Contamination-free parametric multi-turn coding task suites (train / held-out eval)
-│   ├── grader.py     # Anti-cheat verifier (pristine test overlay + hidden tests + reward-hack flags)
-│   └── sandbox.py    # Pluggable SandboxBackend: LocalSubprocess, ModalSandbox, and shapens/tri seam
+│   ├── generator.py          # 5 parametric, contamination-free coding families (train / held-out eval)
+│   ├── grader.py             # Hardened (python3 -I -S + pristine overlay + hidden tests) vs naive mode
+│   └── sandbox.py            # SandboxBackend protocol: LocalSubprocess, ModalSandbox, TriSandboxBackend
 ├── rollout/
-│   ├── protocol.py   # Multi-turn coding tools + exact token-ID trajectory builder with binary loss_mask
-│   └── vllm_worker.py# Decoupled vLLM rollout client (token IDs + logprobs=1 + weight-sync hook)
+│   ├── protocol.py           # Escape-free XML + JSON coding tools + exact token-ID TrajectoryBuilder
+│   ├── runner.py             # Lockstep batched multi-turn rollout engine (ChatML + binary loss_mask)
+│   └── vllm_worker.py        # OpenAI-compatible vLLM client with exact token_id return + LoRA reload
 ├── trainer/
-│   ├── grpo.py       # From-scratch PyTorch GRPO + observation masking + TIM logging + MIS/CIS ablation
-│   └── weight_sync.py# SHA-256 parameter digest verification (zero silent staleness)
+│   ├── grpo.py               # From-scratch PyTorch GRPO + observation masking + TIM stats + MIS/k3-KL
+│   ├── triton_logprob.py     # Custom Triton online-LSE fused per-token logprob kernel (fwd + bwd)
+│   ├── weight_sync.py        # Raw-byte SHA-256 parameter digest (zero silent staleness)
+│   ├── engine.py             # Gradient-accumulated GRPO step + adapter export SHA-256 verification
+│   └── modal_train.py        # Co-located H100 vLLM + PEFT LoRA loop (zero-VRAM ref KL + stale_steps)
 ├── eval/
-│   └── stats.py      # Unbiased pass@k + 95% bootstrap CIs + wall-clock GPU utilization breakdown
-└── modal_app.py      # Ephemeral Modal Sandbox pool + GPU burst runner
+│   ├── stats.py              # Unbiased pass@k + deterministic 95% percentile bootstrap CIs
+│   └── baseline.py           # Per-family pass@k, tamper rate, turn depth, and latency telemetry
+└── modal_app.py              # Modal GPU entrypoints (smoke test, Triton bench, baseline eval, GRPO train)
 ```
 
-## Quickstart
+See [ARCH.md](ARCH.md) for the 5 enforced invariants and [docs/results-qwen3b-ablation.md](docs/results-qwen3b-ablation.md) for detailed ablation tables.
+
+---
+
+## Quickstart & Reproduction
 
 ```bash
 uv venv && source .venv/bin/activate
 uv pip install -e ".[dev,ml,modal]"
 
-# 1. Verify every generated task fails untouched, passes reference solution, and catches reward hacking
-loop self-check --count 30
+# 1. Verify all 5 task families fail untouched, pass reference fix, and block visible-test tampering
+loop self-check --count 20
 
-# 2. Run unit tests (grader anti-cheat, PyTorch GRPO numerics, TIM/MIS, batched rollout, pass@k CIs)
-pytest
+# 2. Run strict lint, typecheck, and unit tests
+ruff check src tests && mypy src tests && pytest -v
 
-# 3. Cheap (~$0.05) Modal GPU smoke test
-modal run src/loop/modal_app.py::gpu_smoke_test
+# 3. Benchmark the custom Triton kernel on Modal H100 (~$0.05)
+modal run src/loop/modal_app.py::bench_triton --batch-size 2 --seq-len 2048 --vocab-size 152064
 
-# 4. Run batched multi-turn vLLM baseline eval on Modal L40S (~$0.15-$0.30 for 30 tasks x 4 samples)
-modal run src/loop/modal_app.py::baseline_eval \
-  --model Qwen/Qwen2.5-Coder-1.5B-Instruct \
-  --num-tasks 30 --samples-per-task 4
-
-# 5. Run co-located H100 GRPO + vLLM LoRA weight-sync training (~$0.80-$1.50 for 12 steps)
+# 4. Reproduce the 7B 5-family H100 GRPO run (powered by the live Triton kernel)
 modal run src/loop/modal_app.py::train_grpo \
-  --run-name grpo_qwen15b_mis --steps 12 --use-mis true --grader-mode hardened
+  --run-name grpo_7b_5fam_hardened \
+  --model Qwen/Qwen2.5-Coder-7B-Instruct \
+  --steps 20 --tasks-per-step 5 --group-size 8 \
+  --micro-batch-size 1 --eval-every 5 --eval-tasks 50 --eval-samples 4
+
+# 5. Regenerate all SVG charts in docs/assets/ from results/*.json
+python scripts/render_charts.py
 ```
-
-## Compute Strategy
-
-* **M1–M3 (All-Modal):** Ephemeral Modal Sandboxes + burst H100/A100 GPU functions sharing Modal Volumes (pay-per-second, zero idle burn, ~$2–$5 per 1.5B–3B ablation).
-* **M4 (Optional RunPod/Linux bare-metal VM):** Native Linux host with `fuse3` + `gVisor`/`Kata` to benchmark **`shapens/tri`** copy-on-write workspaces head-to-head against standard container cold-starts.
-
-See [ARCH.md](ARCH.md) for the exact invariants and milestone checklist.

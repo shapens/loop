@@ -115,21 +115,25 @@ def _line_plot(
                     f'<circle cx="{sx(x):.1f}" cy="{sy(y):.1f}" r="{s.get("r", 3.2)}" fill="{col}"/>'
                 )
 
-    # Legend row(s)
-    lx, ly = x0 + 16, y0 + ph - 20
+    # Legend row(s) — supports up to 5 items cleanly across 2 rows
+    lx, ly = x0 + 16, y0 + ph - 14
+    cols = 3 if len(series) > 4 else 2
+    col_w = (pw - 24) / cols
     for idx, s in enumerate(series):
         col = s["color"]
         name = s["label"]
-        cx = lx + (idx % 2) * (pw / 2 - 12)
-        cy = ly - (14 if len(series) > 2 and idx < 2 else 0)
+        cx = lx + (idx % cols) * col_w
+        row_idx = idx // cols
+        total_rows = (len(series) + cols - 1) // cols
+        cy = ly - (total_rows - 1 - row_idx) * 14
         if s.get("dash"):
             parts.append(
-                f'<line x1="{cx:.1f}" x2="{cx + 12:.1f}" y1="{cy - 3:.1f}" y2="{cy - 3:.1f}" '
+                f'<line x1="{cx:.1f}" x2="{cx + 10:.1f}" y1="{cy - 3:.1f}" y2="{cy - 3:.1f}" '
                 f'stroke="{col}" stroke-width="2" stroke-dasharray="3 2"/>'
             )
         else:
-            parts.append(f'<circle cx="{cx + 5:.1f}" cy="{cy - 3:.1f}" r="4" fill="{col}"/>')
-        parts.append(f'<text x="{cx + 16:.1f}" y="{cy:.1f}" class="ax">{name}</text>')
+            parts.append(f'<circle cx="{cx + 4:.1f}" cy="{cy - 3:.1f}" r="3.5" fill="{col}"/>')
+        parts.append(f'<text x="{cx + 14:.1f}" y="{cy:.1f}" class="ax">{name}</text>')
 
     return "\n".join(parts) + "\n"
 
@@ -296,12 +300,12 @@ def render_7b_headline() -> None:
         410,
         302,
         title="7B Held-Out Pass@1 Across All 5 Coding Families",
-        subtitle="Systems, async concurrency, spec math, ledger, keyset paging",
+        subtitle="async_keyed_queue jumps 7.5% -> 57.5%; ledger 70% -> 97.5%",
         x_max=max_s,
         y_max=1.0,
         x_ticks=e_steps,
         y_fmt="pct",
-        series=fam_series[:4],
+        series=fam_series,
     )
     svg += "</svg>\n"
     (ASSETS / "headline_7b_5fam.svg").write_text(svg, encoding="utf-8")
